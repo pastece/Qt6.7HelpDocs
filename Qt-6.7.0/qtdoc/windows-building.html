@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- windows.qdoc -->
+  <meta name="description" content="Configuring and building Qt for Windows.">
+  <title>Qt for Windows - Building from Source | Qt 6.7</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="index.html" translate="no">Qt 6.7</a></li>
+<li>Qt for Windows - Building from Source</li>
+<li id="buildversion">Qt 6.7.0 Reference Documentation</li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#step-1-getting-the-sources">Step 1: Getting the Sources</a></li>
+<li class="level1"><a href="#step-2-installing-build-requirements-and-set-environment">Step 2: Installing Build Requirements and Set Environment</a></li>
+<li class="level2"><a href="#build-tools">Build Tools</a></li>
+<li class="level2"><a href="#compilers">Compilers</a></li>
+<li class="level2"><a href="#qdoc-dependencies">QDoc Dependencies</a></li>
+<li class="level2"><a href="#setting-the-environment">Setting the Environment</a></li>
+<li class="level1"><a href="#step-3-building-the-qt-libraries-and-tools">Step 3: Building the Qt Libraries and Tools</a></li>
+<li class="level1"><a href="#step-4-using-qt">Step 4: Using Qt</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Qt for Windows - Building from Source</h1>
+<!-- $$$windows-building.html-description -->
+<div class="descr" id="details">
+<p>This page describes the process of configuring and building <a href="windows.html" translate="no">Qt for Windows</a>. To download and install a pre-built Qt for Windows, follow the instructions on the <a href="gettingstarted.html" translate="no">Getting Started with Qt</a> page.</p>
+<h2 id="step-1-getting-the-sources">Step 1: Getting the Sources</h2>
+<p>Qt sources can be installed in Qt Online Installer. Source packages are also available as <a href="https://code.qt.io" translate="no">Git repositories</a>, as archives in the <a href="https://account.qt.io/" translate="no">Qt Account</a> (commercial users), and on <a href="https://download.qt.io" translate="no">download.qt.io</a> (open-source users).</p>
+<p>If you install the sources through Qt Online Installer, they will be available in the Qt installation directory, for instance <code translate="no">C:\Qt\6.7.0\Src</code>.</p>
+<p>If you downloaded the source archive, extract it to a directory of your choice, for instance <code translate="no">C:\dev\Qt\src</code>.</p>
+<div class="admonition note">
+<p><b>Note: </b>The path to the source directory must not contain any spaces or Windows-specific file system characters. The path should also be kept short. This prevents issues with too long file paths in the compilation phase.</p>
+</div>
+<h2 id="step-2-installing-build-requirements-and-set-environment">Step 2: Installing Build Requirements and Set Environment</h2>
+<p>To build Qt from sources you need a build environment with a supported compiler and various build tools.</p>
+<h3 id="build-tools">Build Tools</h3>
+<div class="table"><table class="generic" width="80%">
+ <thead><tr class="qt-style"><th >Tool</th><th >Supported Versions</th><th >Description</th></tr></thead>
+<tr valign="top" class="odd"><td >CMake</td><td >Version 3.16 and newer (3.17 and newer for <code translate="no">-debug-and-release</code> builds 3.21 and newer for <code translate="no">-static</code> builds).</td><td >Required for configuring the Qt build. Available in Qt Online Installer and on <a href="https://cmake.org" translate="no">cmake.org</a>.</td></tr>
+<tr valign="top" class="even"><td >Ninja</td><td >-</td><td >Recommended tool for building Qt. Available in Qt Online Installer and on <a href="https://ninja-build.org" translate="no">ninja-build.org</a>.</td></tr>
+<tr valign="top" class="odd"><td >Python</td><td >Version 3</td><td >Required build tool. Windows installers are available on <a href="https://www.python.org/downloads/windows/" translate="no">python.org</a>, or from the <a href="https://docs.python.org/3/using/windows.html#windows-store" translate="no">Microsoft Store</a>.</td></tr>
+</table></div>
+<p>The executables <code translate="no">cmake.exe</code>, <code translate="no">ninja.exe</code>, and <code translate="no">python.exe</code> must be available in your build environment. Add the respective directory to your <code translate="no">PATH</code> environment variable.</p>
+<h3 id="compilers">Compilers</h3>
+<p>The following compilers and configurations are supported in Qt 6.7:</p>
+<div class="table"><table class="generic" width="80%">
+ <thead><tr class="qt-style"><th >Operating System</th><th >Architecture</th><th >Compiler</th><th >Notes</th></tr></thead>
+<tr valign="top" class="odd"><td >Windows 10 (1809 or later)</td><td ><code translate="no">x86_64</code></td><td >MSVC 2022, MSVC 2019, MinGW 11.2</td><td ></td></tr>
+<tr valign="top" class="even"><td >Windows 11</td><td ><code translate="no">x86_64</code></td><td >MSVC 2022, MSVC 2019, MinGW 11.2</td><td ></td></tr>
+<tr valign="top" class="odd"><td >Windows on ARM</td><td ><code translate="no">arm64</code></td><td >MSVC 2019/2022</td><td >Technology Preview</td></tr>
+</table></div>
+<div class="admonition note">
+<p><b>Note: </b>Windows on ARM is only supported as a deployment target. Applications have to be cross-compiled from an x86-64 Windows machine and deployed to target.</p>
+</div>
+<h3 id="qdoc-dependencies">QDoc Dependencies</h3>
+<p><a href="../qdoc/qdoc-index.html" translate="no">QDoc</a> uses Clang to parse C++ code. If you wish to build QDoc manually, refer to <a href="../qdoc/qdoc-guide-clang.html" translate="no">Installing Clang for QDoc</a> for specific build requirements.</p>
+<h3 id="setting-the-environment">Setting the Environment</h3>
+<p>For MSVC, do one of the following:</p>
+<ul>
+<li>Run the vcvarsall.bat:<pre class="cpp plain" translate="no">
+ &quot;C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvarsall.bat&quot; amd64
+</pre>
+</li>
+<li>Search on the Windows search bar for the VS Native Tools command prompt.</li>
+</ul>
+<p>For MinGW: Add MinGW to <code translate="no">PATH</code> environment variable:</p>
+<pre class="cpp plain" translate="no">
+ Set PATH=C:\qt\tools\mingw1120_64\bin;%PATH%
+</pre>
+<h2 id="step-3-building-the-qt-libraries-and-tools">Step 3: Building the Qt Libraries and Tools</h2>
+<p>To configure your build, create a build directory and run the <code translate="no">configure.bat</code> script in this directory:</p>
+<pre class="cpp plain" translate="no">
+ mkdir C:\dev\qt-build
+ cd C:\dev\qt-build
+ C:\dev\Qt\src\configure.bat
+</pre>
+<p>By default, Qt is configured for installation in the <code translate="no">C:\Qt\Qt-6.5.3</code> directory. This can be changed by using the <code translate="no">-prefix</code> option. See the list of <a href="configure-options.html" translate="no">Qt Configure Options</a> to tweak further.</p>
+<p>Then build the libraries and tools:</p>
+<pre class="cpp plain" translate="no">
+ cmake --build . --parallel
+</pre>
+<p>Period after <code translate="no">--build</code> means current folder.</p>
+<p>After building, you need to install the libraries and tools in the desired path (unless you enabled a <a href="https://doc.qt.io/qt-6/configure-options.html#developer-builds" translate="no">developer build</a>:</p>
+<pre class="cpp plain" translate="no">
+ cmake --install .
+</pre>
+<h2 id="step-4-using-qt">Step 4: Using Qt</h2>
+<p>After Qt is installed, you can start building applications with it.</p>
+<p>If you work from the command line, consider adding the Qt tools to your <code translate="no">PATH</code> environment variable as follows:</p>
+<pre class="cpp plain" translate="no">
+ set PATH=C:\Qt\Qt-6.5.3\bin;%PATH%
+</pre>
+<p>If you plan to use Qt from an IDE, you need to register the Qt version explicitly there. For Qt Creator, see <a href="https://doc.qt.io/qtcreator/creator-project-qmake.html" translate="no">Qt Creator: Adding Qt Versions</a>.</p>
+</div>
+<!-- @@@windows-building.html -->
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2024 <span translate="no">The Qt Company Ltd.</span>
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the <span translate="no">Free Software Foundation</span>.<br/>    <span translate="no">Qt</span> and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of <span translate="no">The Qt Company Ltd.</span> in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>

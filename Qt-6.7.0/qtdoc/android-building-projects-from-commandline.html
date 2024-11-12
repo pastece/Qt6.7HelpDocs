@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- android-building-projects-from-commandline.qdoc -->
+  <meta name="description" content="How to build user projects using Qt for Android from the command line.">
+  <title>Building Qt for Android Projects from Command Line | Qt 6.7</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="index.html" translate="no">Qt 6.7</a></li>
+<li>Building Qt for Android Projects from Command Line</li>
+<li id="buildversion">Qt 6.7.0 Reference Documentation</li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+  <link rel="prev" href="android-building.html" />
+  <link rel="next" href="porting-to-android.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="android-building.html">Qt for Android - Building from Source</a>
+<span class="naviSeparator">  &#9702;  </span>
+<a class="nextPage" href="porting-to-android.html">Porting to Android</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#building-with-cmake">Building with CMake</a></li>
+<li class="level2"><a href="#building-multi-abi-packages-using-cmake">Building multi-ABI packages using CMake</a></li>
+<li class="level2"><a href="#creating-the-android-bundle">Creating the Android Bundle</a></li>
+<li class="level2"><a href="#signing-the-android-package">Signing the Android Package</a></li>
+<li class="level1"><a href="#building-with-qmake">Building with qmake</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Building Qt for Android Projects from Command Line</h1>
+<!-- $$$android-building-projects-from-commandline.html-description -->
+<div class="descr" id="details">
+<h2 id="building-with-cmake">Building with CMake</h2>
+<p>To build CMake projects with an installed Qt, for example, for Linux use the following with <a href="../qtcmake/cmake-build-on-cmdline.html" translate="no">qt-cmake</a> wrapper:</p>
+<pre class="cpp plain" translate="no">
+ ~/Qt/&lt;qt_version&gt;/android_&lt;abi&gt;/bin/qt-cmake \
+     -DANDROID_SDK_ROOT=~/Android/Sdk \
+     -DANDROID_NDK_ROOT=~/Android/Sdk/ndk/26.1.10909125 \
+     -S &lt;source_dir&gt; -B &lt;build_dir&gt; \
+     -GNinja
+</pre>
+<p>Throughout this page, we use the Android SDK path for Linux for simplicity, however, when issuing these commands, make sure to use your system's relevant path.</p>
+<p>The Android SDK is commonly installed by Qt Creator or Android Studio in the following locations:</p>
+<ul>
+<li>Linux: ~/Android/Sdk/</li>
+<li>macOS: ~/Library/Android/sdk/</li>
+<li>Windows: C:\Users\&lt;USER&gt;\AppData\Local\Android\Sdk\</li>
+</ul>
+<div class="admonition note">
+<p><b>Note: </b>If you're using <a href="android-building.html" translate="no">a self-built</a> Qt, you don't need to provide the SDK and NDK arguments, as the same values used for building Qt are used with <i>qt-cmake</i>.</p>
+</div>
+<h3 id="building-multi-abi-packages-using-cmake">Building multi-ABI packages using CMake</h3>
+<p>In Qt 6.7, several ways exist to build a multi-ABI package. By default, only the single ABI belonging to the <a href="../qtcmake/cmake-build-on-cmdline.html" translate="no">qt-cmake</a> script is selected. Setting the <a href="../qtcore/cmake-variable-qt-android-build-all-abis.html#cmake-variable-qt-android-build-all-abis" translate="no">QT_ANDROID_BUILD_ALL_ABIS</a> variable to <code translate="no">TRUE</code> enables the automatic detection of available Qt for Android SDKs. The detection mechanism assumes the use of the default directory structure supplied by Qt Online Installer:</p>
+<pre class="cpp plain" translate="no">
+ ~/Qt/&lt;qt_version&gt;:
+     android_arm64_v8a
+     android_armv7
+     android_x86
+     android_x86_64
+</pre>
+<p>The command below shows the easiest way to build an Android multi-ABI package using the Qt for Android SDKs supplied by Qt Online Installer:</p>
+<pre class="cpp plain" translate="no">
+ ~/Qt/&lt;qt_version&gt;/android_&lt;abi&gt;/bin/qt-cmake \
+     -DQT_ANDROID_BUILD_ALL_ABIS=TRUE \
+     -DANDROID_SDK_ROOT=~/Android/Sdk \
+     -DANDROID_NDK_ROOT=~/Android/Sdk/ndk/26.1.10909125 \
+     -S &lt;source_directory&gt; -B &lt;build_directory&gt;
+     -GNinja
+</pre>
+<p>Using the <a href="../qtcore/cmake-variable-qt-android-abis.html#cmake-variable-qt-android-abis" translate="no">QT_ANDROID_ABIS</a> variable, it's possible to customize the list of ABIs the project is built for. The corresponding Qt for Android development kits needs to follow the directory structure described previously. The following command line configures a project for <code translate="no">arm64-v8a</code> and <code translate="no">x86</code> ABIs only:</p>
+<pre class="cpp plain" translate="no">
+ ~/Qt/&lt;qt_version&gt;/android_&lt;abi&gt;/bin/qt-cmake \
+     -DQT_ANDROID_ABIS=&quot;arm64-v8a;x86&quot; \
+     -DANDROID_SDK_ROOT=~/Android/Sdk \
+     -DANDROID_NDK_ROOT=~/Android/Sdk/ndk/26.1.10909125 \
+     -S &lt;source_directory&gt; -B &lt;build_directory&gt;
+     -GNinja
+</pre>
+<div class="admonition note">
+<p><b>Note: </b>The ABI of the primary SDK that <a href="../qtcmake/cmake-build-on-cmdline.html" translate="no">qt-cmake</a> script belongs to is added to the list of used ABIs unconditionally. It's not possible to exclude it from the build.</p>
+</div>
+<div class="admonition note">
+<p><b>Note: </b><a href="../qtcore/cmake-variable-qt-android-build-all-abis.html#cmake-variable-qt-android-build-all-abis" translate="no">QT_ANDROID_BUILD_ALL_ABIS</a> has higher priority than <a href="../qtcore/cmake-variable-qt-android-abis.html#cmake-variable-qt-android-abis" translate="no">QT_ANDROID_ABIS</a>.</p>
+</div>
+<p>Paths to the Qt for Android SDKs that do not match the default directory structure can be changed using the corresponding <a href="../qtcore/cmake-variable-qt-path-android-abi.html#cmake-variable-qt-path-android-abi-abi" translate="no">QT_PATH_ANDROID_ABI_&lt;ABI&gt;</a> variables.</p>
+<p>The following example enables the automatic detection of available Qt for Android SDKs and specifies custom paths to <code translate="no">armeabi-v7a</code> and <code translate="no">arm64-v8a</code> SDKs:</p>
+<pre class="cpp plain" translate="no">
+ &lt;qt_for_android_install_path&gt;/bin/qt-cmake \
+     -DQT_ANDROID_BUILD_ALL_ABIS=TRUE
+     -DQT_PATH_ANDROID_ABI_armeabi-v7a=&quot;&lt;Qt/for/armeabi-v7a&gt;&quot; \
+     -DQT_PATH_ANDROID_ABI_arm64-v8a=&quot;&lt;Qt/for/arm64-v8a&gt;&quot; \
+     -DANDROID_SDK_ROOT=~/Android/Sdk \
+     -DANDROID_NDK_ROOT=~/Android/Sdk/ndk/26.1.10909125 \
+     -S &lt;source_directory&gt; -B &lt;build_directory&gt;
+     -GNinja
+</pre>
+<p>It's also possible to set the <a href="../qtcore/cmake-target-property-qt-android-abis.html#cmake-target-property-qt-android-abis" translate="no">QT_ANDROID_ABIS</a> target property that specifies a list of ABIs that the single executable target is built for. For example:</p>
+<pre class="cpp plain" translate="no">
+ qt_add_executable(MyApp main.cpp)
+ set_target_properties(MyApp PROPERTIES QT_ANDROID_ABIS &quot;arm64-v8a;x86&quot;)
+</pre>
+<p>The <code translate="no">MyApp</code> target will be built for <code translate="no">armeabi-v7a</code> and <code translate="no">arm64-v8a</code> only, even if the <code translate="no">QT_ANDROID_BUILD_ALL_ABIS</code> or <code translate="no">QT_ANDROID_ABIS</code> variable is set.</p>
+<h3 id="creating-the-android-bundle">Creating the Android Bundle</h3>
+<p>Once the project is configured, you may use the following CMake targets to create the application bundle:</p>
+<pre class="cpp plain" translate="no">
+ cmake --build . --target apk
+</pre>
+<p>Or to generate the AAB:</p>
+<pre class="cpp plain" translate="no">
+ cmake --build . --target aab
+</pre>
+<p>Under the hood, your Qt code is built and copied to the <code translate="no">android-build</code> directory, then <a href="http://www.gradle.org" translate="no">Gradle</a> is used to build the Java code and package the application.</p>
+<h3 id="signing-the-android-package">Signing the Android Package</h3>
+<p>If an APK intended for release is built, then it should be signed. For more information on signing the package with Qt Creator, see <a href="http://doc.qt.io/qtcreator/creator-deploying-android.html#signing-android-packages" translate="no">Signing Android packages</a>. Otherwise, check the CMake variables <a href="../qtcore/cmake-variable-qt-android-sign-apk.html" translate="no">QT_ANDROID_SIGN_APK</a> and <a href="../qtcore/cmake-variable-qt-android-sign-aab.html" translate="no">QT_ANDROID_SIGN_AAB</a>.</p>
+<h2 id="building-with-qmake">Building with qmake</h2>
+<p>You can continue to use <code translate="no">qmake</code> to build user projects as in Qt 5.</p>
+<div class="admonition note">
+<p><b>Note: </b>Building multi-ABI packages with <code translate="no">qmake</code> is not supported in Qt 6.</p>
+</div>
+</div>
+<p><b>See also </b><a href="../qtcore/cmake-variable-qt-android-abis.html#cmake-variable-qt-android-abis" translate="no">QT_ANDROID_ABIS</a>, <a href="../qtcore/cmake-variable-qt-android-build-all-abis.html#cmake-variable-qt-android-build-all-abis" translate="no">QT_ANDROID_BUILD_ALL_ABIS</a>, <a href="../qtcore/cmake-variable-qt-path-android-abi.html#cmake-variable-qt-path-android-abi-abi" translate="no">QT_PATH_ANDROID_ABI_&lt;ABI&gt;</a>, and <a href="../qtcore/cmake-target-property-qt-android-abis.html#cmake-target-property-qt-android-abis" translate="no">QT_ANDROID_ABIS</a>.</p>
+<!-- @@@android-building-projects-from-commandline.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="android-building.html">Qt for Android - Building from Source</a>
+<span class="naviSeparator">  &#9702;  </span>
+<a class="nextPage" href="porting-to-android.html">Porting to Android</a>
+</p>
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2024 <span translate="no">The Qt Company Ltd.</span>
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the <span translate="no">Free Software Foundation</span>.<br/>    <span translate="no">Qt</span> and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of <span translate="no">The Qt Company Ltd.</span> in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>

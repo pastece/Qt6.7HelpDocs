@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- mobile.qdoc -->
+  <meta name="description" content="Development for mobile devices.">
+  <title>Mobile Development | Qt 6.7</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="index.html" translate="no">Qt 6.7</a></li>
+<li>Mobile Development</li>
+<li id="buildversion">Qt 6.7.0 Reference Documentation</li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#android">Android</a></li>
+<li class="level1"><a href="#ios">iOS</a></li>
+<li class="level1"><a href="#tools-for-mobile-development">Tools for Mobile Development</a></li>
+<li class="level2"><a href="#design-tools-for-mobile">Design Tools for Mobile</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Mobile Development</h1>
+<!-- $$$mobiledevelopment.html-description -->
+<div class="descr" id="details">
+<p>Qt supports development and deployment of mobile applications.</p>
+<p>The following pages contain information about setting up Qt Creator and how to get started with the mobile platforms:</p>
+<ul>
+<li><a href="android.html" translate="no">Android</a></li>
+<li><a href="ios.html" translate="no">iOS</a></li>
+</ul>
+<h2 id="android">Android</h2>
+<p>There is support for Android development in Qt 6. With Qt Creator, you can connect to devices, develop, test, and package Android applications.</p>
+<p>The following configurations are supported in this Qt release:</p>
+<div class="table"><table class="generic" width="80%">
+ <thead><tr class="qt-style"><th >Distribution</th><th >Architecture</th><th >Compiler</th><th >JDK</th><th >Gradle</th><th >Package</th></tr></thead>
+<tr valign="top" class="odd"><td >Android 8.0 (API 26) <b>to</b> 14 (API 34)</td><td ><code translate="no">arm64-v8</code>, <code translate="no">x86_64</code>, <code translate="no">x86</code>, and <code translate="no">armeabi-v7a</code></td><td >Clang 17.0.2 (NDK r26b or 26.1.10909125)</td><td >JDK 17</td><td >Gradle 8.3 and AGP 7.4.1</td><td >Multi-ABI <code translate="no">APK</code>s and <code translate="no">AAB</code>s</td></tr>
+</table></div>
+<div class="admonition note">
+<p><b>Note: </b>Multi-ABI builds are available only when using CMake. For more information, see <a href="../qtcore/cmake-variable-qt-android-abis.html" translate="no">CMake Android Multi-ABIs</a>.</p>
+</div>
+<div class="admonition note">
+<p><b>Note: </b>It's recommended that Qt apps use the same NDK r26b version used for building these official Qt for Android libraries to avoid missing symbol errors.</p>
+</div>
+<ul>
+<li><a href="android.html" translate="no">Qt for Android</a></li>
+</ul>
+<h2 id="ios">iOS</h2>
+<p>There is support for developing Qt applications for Apple iPad and iPhone, via <a href="ios.html" translate="no">Qt for iOS</a>. Qt Creator supplements <a href="http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12" translate="no">Xcode</a> for development and deployment.</p>
+<div class="table"><table class="generic" width="80%">
+ <thead><tr class="qt-style"><th >Target Platform</th><th >Architecture</th><th >Build Environment</th></tr></thead>
+<tr valign="top" class="odd"><td >iOS 14, 15, 16, 17</td><td ><code translate="no">armv8</code> (<code translate="no">arm64</code>)</td><td >Xcode 15 (iOS 17 SDK)</td></tr>
+</table></div>
+<ul>
+<li><a href="ios.html" translate="no">Qt for iOS</a></li>
+<li><a href="examples-ios.html" translate="no">iOS Examples</a></li>
+</ul>
+<h2 id="tools-for-mobile-development">Tools for Mobile Development</h2>
+<p><a href="qt-debian-packages.html#qt-creator" translate="no">Qt Creator</a> is the IDE for Qt development. Qt Creator creates project files, test and debug code, and connects to mobile devices. For Android, Qt Creator can sign and package APK files, ready for publishing to Google Play. <a href="http://itunes.apple.com/us/app/xcode/id497799835?ls=1&mt=12" translate="no">Xcode</a> is necessary for development on Apple platforms and Qt Creator can create project files and connect to Apple devices for testing.</p>
+<h3 id="design-tools-for-mobile">Design Tools for Mobile</h3>
+<p>Design tools aid UI development by allowing designers to create layouts and animation that can be converted into Qt compatible formats. 2D and 3D assets created from design software can be integrated into Qt applications.</p>
+<ul>
+<li><a href="https://doc.qt.io/qt3dstudio/index.html" translate="no">Qt 3D Studio</a></li>
+<li><a href="https://doc.qt.io/qtdesignstudio/index.html" translate="no">Qt Design Studio</a></li>
+</ul>
+</div>
+<!-- @@@mobiledevelopment.html -->
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2024 <span translate="no">The Qt Company Ltd.</span>
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the <span translate="no">Free Software Foundation</span>.<br/>    <span translate="no">Qt</span> and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of <span translate="no">The Qt Company Ltd.</span> in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>

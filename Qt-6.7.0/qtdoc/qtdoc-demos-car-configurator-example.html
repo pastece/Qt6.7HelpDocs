@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- car_configurator.qdoc -->
+  <meta name="description" content="A car model example that demonstrates using Qt Quick 3D cameras, extended scene environment and Qt Quick 3D.">
+  <title>Car Configurator | Qt 6.7</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="index.html" translate="no">Qt 6.7</a></li>
+<li>Car Configurator</li>
+<li id="buildversion">Qt 6.7.0 Reference Documentation</li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#running-the-example">Running the Example</a></li>
+<li class="level1"><a href="#overview">Overview</a></li>
+<li class="level1"><a href="#demo-mode">Demo Mode</a></li>
+<li class="level1"><a href="#reset-camera">Reset Camera</a></li>
+<li class="level1"><a href="#scene-environments">Scene environments</a></li>
+<li class="level1"><a href="#car-colors">Car Colors</a></li>
+<li class="level1"><a href="#lights">Lights</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Car Configurator</h1>
+<!-- $$$demos/car-configurator-brief -->
+<p>A car model example that demonstrates using <a href="../qtquick3d/qtquick3d-index.html" translate="no">Qt Quick 3D</a> cameras, extended scene environment and Qt Quick 3D.</p>
+<!-- @@@demos/car-configurator -->
+<!-- $$$demos/car-configurator-description -->
+<div class="descr" id="details">
+<p class="centerAlign"><img src="images/car_configurator_overview.png" alt="" /></p><h4 id="running-the-example">Running the Example</h4>
+<p>To run the example from <a href="https://doc.qt.io/qtcreator/index.html" translate="no">Qt Creator</a>, open the <b translate="no">Welcome</b> mode and select the example from <b translate="no">Examples</b>. For more information, visit <a href="https://doc.qt.io/qtcreator/creator-build-example-application.html" translate="no">Building and Running an Example</a>.</p>
+<h4 id="overview">Overview</h4>
+<p><i>Car Configurator</i> shows a car in different scene environments and in different colors. It's implemented with QML and relies on a number of Qt modules, most prominently <a href="../qtquick/qtquick-index.html" translate="no">Qt Quick</a> and <a href="../qtquick3d/qtquick3d-index.html" translate="no">Qt Quick 3D</a>.</p>
+<div class="admonition note">
+<p><b>Note: </b>This example does download some assets from an internet server at runtime. Therefore, you will need an internet connection when launching it for the first time.</p>
+</div>
+<p>You can interact with the car model in two modes:</p>
+<ul>
+<li>Demo Mode</li>
+<li>User mode</li>
+</ul>
+<h4 id="demo-mode">Demo Mode</h4>
+<p>The camera perspective moves along different paths and shows different views of the car.</p>
+<h4 id="reset-camera">Reset Camera</h4>
+<p>The camera moves to its initial position.</p>
+<h4 id="scene-environments">Scene environments</h4>
+<p>There are four scene environments available for this example:</p>
+<ul>
+<li>Desert</li>
+<li>Garage</li>
+<li>Studio</li>
+<li>Animated</li>
+</ul>
+<h4 id="car-colors">Car Colors</h4>
+<p>There are four colors available for the car:</p>
+<ul>
+<li>White</li>
+<li>Black</li>
+<li>Yellow</li>
+<li>Red</li>
+</ul>
+<h4 id="lights">Lights</h4>
+<p>You can turn the lights of the car on and off.</p>
+<p><a href="https://code.qt.io/cgit/qt/qtdoc.git/tree/examples/demos/car-configurator?h=6.7" translate="no">Example project @ code.qt.io</a></p>
+</div>
+<!-- @@@demos/car-configurator -->
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2024 <span translate="no">The Qt Company Ltd.</span>
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the <span translate="no">Free Software Foundation</span>.<br/>    <span translate="no">Qt</span> and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of <span translate="no">The Qt Company Ltd.</span> in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>

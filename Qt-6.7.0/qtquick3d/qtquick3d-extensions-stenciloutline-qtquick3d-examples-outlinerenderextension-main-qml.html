@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- qtquick3d-examples-outline_extension.qdoc -->
+  <meta name="description" content="Demonstrates how the QtQuick3D Render Extension can be used to implement stencil outlining.">
+  <title>Qt Quick 3D - Stencil Outline Extension Example | Qt Quick 3D 6.7.0</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="../qtdoc/index.html" translate="no">Qt 6.7</a></li>
+<li><a href="qtquick3d-index.html" translate="no">Qt Quick 3D</a></li>
+<li><a href="quick3d-examples.html" translate="no">Qt Quick 3D Examples and Tutorials</a></li>
+<li>Qt Quick 3D - Stencil Outline Extension Example</li>
+<li id="buildversion"><a href="qtquick3d-index.html" translate="no">Qt Quick 3D | Commercial or GPLv3</a></li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<h1 class="title">Qt Quick 3D - Stencil Outline Extension Example</h1>
+<pre class="qml" translate="no">
+ <span class="comment">// Copyright (C) 2023 The Qt Company Ltd.</span>
+ <span class="comment">// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause</span>
+
+ import QtQuick
+ import QtQuick.Controls
+ import QtQuick.Layouts
+
+ import QtQuick3D
+ import QtQuick3D.Helpers
+ import QtQuick3D.Examples.OutlineRenderExtension
+
+ <span class="type"><a href="../qtquickcontrols/qml-qtquick-controls-applicationwindow.html" translate="no">ApplicationWindow</a></span> {
+     <span class="name">width</span>: <span class="number">640</span>
+     <span class="name">height</span>: <span class="number">480</span>
+     <span class="name">visible</span>: <span class="number">true</span>
+     <span class="name">title</span>: <span class="name">qsTr</span>(<span class="string">&quot;Stencil outline example&quot;</span>)
+
+     <span class="type"><a href="../qtquick/qml-qtquick-layouts-columnlayout.html" translate="no">ColumnLayout</a></span> {
+         <span class="name">anchors</span>.top: <span class="name">parent</span>.<span class="name">top</span>
+         <span class="name">anchors</span>.left: <span class="name">parent</span>.<span class="name">left</span>
+         <span class="name">anchors</span>.margins: <span class="number">10</span>
+         <span class="name">width</span>: <span class="number">250</span>
+         <span class="type"><a href="../qtquick/qml-qtquick-layouts-rowlayout.html" translate="no">RowLayout</a></span> {
+             <span class="name">Layout</span>.fillWidth: <span class="number">true</span>
+             <span class="type"><a href="../qtquickcontrols/qml-qtquick-controls-label.html" translate="no">Label</a></span> {
+                 <span class="name">text</span>: <span class="string">&quot;Outline Color&quot;</span>
+                 <span class="name">Layout</span>.fillWidth: <span class="number">true</span>
+             }
+             <span class="type">ColorPicker</span> {
+                 <span class="name">id</span>: <span class="name">colorPicker</span>
+                 <span class="name">color</span>: <span class="name">outlineMaterial</span>.<span class="name">baseColor</span>
+                 <span class="name">onColorModified</span>: (<span class="keyword"></span>color) =&gt; {<span class="name">outlineMaterial</span>.<span class="name">baseColor</span> <span class="operator">=</span> <span class="name">color</span>}
+             }
+
+         }
+         <span class="type"><a href="../qtquick/qml-qtquick-layouts-rowlayout.html" translate="no">RowLayout</a></span> {
+             <span class="name">Layout</span>.fillWidth: <span class="number">true</span>
+             <span class="type"><a href="../qtquickcontrols/qml-qtquick-controls-label.html" translate="no">Label</a></span> {
+                 <span class="name">text</span>: <span class="string">&quot;Outline Width (&quot;</span> <span class="operator">+</span> <span class="name">outlineRenderer</span>.<span class="name">outlineScale</span>.<span class="name">toFixed</span>(<span class="number">2</span>) <span class="operator">+</span> <span class="string">&quot;)&quot;</span>
+                 <span class="name">Layout</span>.fillWidth: <span class="number">true</span>
+             }
+             <span class="type"><a href="../qtquickcontrols/qml-qtquick-controls-slider.html" translate="no">Slider</a></span> {
+                 <span class="name">value</span>: <span class="number">1.05</span>
+                 <span class="name">from</span>: <span class="number">1.00</span>
+                 <span class="name">to</span>: <span class="number">3.0</span>
+                 <span class="name">stepSize</span>: <span class="number">0.01</span>
+                 <span class="name">onValueChanged</span>: <span class="name">outlineRenderer</span>.<span class="name">outlineScale</span> <span class="operator">=</span> <span class="name">value</span>
+             }
+         }
+         <span class="type"><a href="../qtquickcontrols/qml-qtquick-controls-label.html" translate="no">Label</a></span> {
+             <span class="name">text</span>: <span class="string">&quot;Click on a model to select it.&quot;</span>
+         }
+     }
+
+     <span class="type"><a href="qml-qtquick3d-view3d.html" translate="no">View3D</a></span> {
+         <span class="name">id</span>: <span class="name">view3d</span>
+         <span class="name">anchors</span>.topMargin: <span class="number">100</span>
+         <span class="name">anchors</span>.fill: <span class="name">parent</span>
+         <span class="name">extensions</span>: [ <span class="type">OutlineRenderExtension</span> {
+                 <span class="name">id</span>: <span class="name">outlineRenderer</span>
+                 <span class="name">outlineMaterial</span>: <span class="name">outlineMaterial</span>
+             }
+         ]
+
+         <span class="type"><a href="qml-qtquick3d-perspectivecamera.html" translate="no">PerspectiveCamera</a></span> {
+             <span class="name">id</span>: <span class="name">camera</span>
+             <span class="name">z</span>: <span class="number">500</span>
+         }
+
+         <span class="type"><a href="qml-qtquick3d-directionallight.html" translate="no">DirectionalLight</a></span> {
+
+         }
+
+         <span class="type"><a href="qml-qtquick3d-directionallight.html" translate="no">DirectionalLight</a></span> {
+             <span class="name">eulerRotation</span>: <span class="name">Qt</span>.<span class="name">vector3d</span>(<span class="number">0</span>, <span class="number">180</span>, <span class="number">0</span>)
+             <span class="name">position</span>.z: -<span class="number">600</span>
+         }
+         <span class="type"><a href="qml-qtquick3d-principledmaterial.html" translate="no">PrincipledMaterial</a></span> {
+             <span class="name">id</span>: <span class="name">outlineMaterial</span>
+             <span class="name">baseColor</span>: <span class="string">&quot;blue&quot;</span>
+             <span class="name">lighting</span>: <span class="name">PrincipledMaterial</span>.<span class="name">NoLighting</span>
+         }
+
+         <span class="type"><a href="qml-qtquick3d-model.html" translate="no">Model</a></span> {
+             <span class="name">source</span>: <span class="string">&quot;models/suzanne.mesh&quot;</span>
+             <span class="name">pickable</span>: <span class="number">true</span>
+             <span class="name">materials</span>: <span class="name">PrincipledMaterial</span> {
+                 <span class="name">baseColor</span>: <span class="string">&quot;red&quot;</span>
+             }
+         }
+
+         <span class="type"><a href="qml-qtquick3d-model.html" translate="no">Model</a></span> {
+             <span class="name">position</span>.x: <span class="number">300</span>
+             <span class="name">source</span>: <span class="string">&quot;models/suzanne.mesh&quot;</span>
+             <span class="name">pickable</span>: <span class="number">true</span>
+             <span class="name">materials</span>: <span class="name">PrincipledMaterial</span> {
+                 <span class="name">baseColor</span>: <span class="string">&quot;green&quot;</span>
+             }
+         }
+
+         <span class="type"><a href="qml-qtquick3d-model.html" translate="no">Model</a></span> {
+             <span class="name">position</span>.x: -<span class="number">300</span>
+             <span class="name">source</span>: <span class="string">&quot;models/suzanne.mesh&quot;</span>
+             <span class="name">pickable</span>: <span class="number">true</span>
+             <span class="name">materials</span>: <span class="name">PrincipledMaterial</span> {
+                 <span class="name">baseColor</span>: <span class="string">&quot;pink&quot;</span>
+             }
+         }
+     }
+
+     <span class="type"><a href="../qtquick/qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+         <span class="name">anchors</span>.fill: <span class="name">view3d</span>
+         <span class="name">onClicked</span>: (<span class="keyword"></span>mouse)=&gt; {
+               let hit = <span class="name">view3d</span>.<span class="name">pick</span>(<span class="name">mouse</span>.<span class="name">x</span>, <span class="name">mouse</span>.<span class="name">y</span>)
+               <span class="name">outlineRenderer</span>.<span class="name">target</span> <span class="operator">=</span> <span class="name">hit</span>.<span class="name">objectHit</span>
+         }
+     }
+ }
+</pre>

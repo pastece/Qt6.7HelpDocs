@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- osmbuildings.qdoc -->
+  <meta name="description" content="A 3D building viewer of OSM (OpenStreetMap) buildings map data.">
+  <title>OSM Buildings | Qt 6.7</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="index.html" translate="no">Qt 6.7</a></li>
+<li>OSM Buildings</li>
+<li id="buildversion">Qt 6.7.0 Reference Documentation</li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#overview">Overview</a></li>
+<li class="level2"><a href="#queue-handling">Queue handling</a></li>
+<li class="level2"><a href="#fetching-and-parsing-data">Fetching and parsing data</a></li>
+<li class="level2"><a href="#controls">Controls</a></li>
+<li class="level2"><a href="#rendering">Rendering</a></li>
+<li class="level1"><a href="#running-the-example">Running the Example</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">OSM Buildings</h1>
+<!-- $$$demos/osmbuildings-brief -->
+<p>A 3D building viewer of OSM (OpenStreetMap) buildings map data.</p>
+<!-- @@@demos/osmbuildings -->
+<!-- $$$demos/osmbuildings-description -->
+<div class="descr" id="details">
+<div class="border"><p class="centerAlign"><img src="images/osmbuildings.jpg" alt="" /></p></div><h4 id="overview">Overview</h4>
+<p>This application demonstrates how to create 3D building geometry for display on a map using data from OpenStreetMap (OSM) servers or a locally limited data set when the server is unavailable.</p>
+<h5 id="queue-handling">Queue handling</h5>
+<p>The application uses a queue to handle concurrent requests to boost up the loading process of maps and building data.</p>
+<pre class="cpp" translate="no">
+ OSMRequest<span class="operator">::</span>OSMRequest(<span class="type"><a href="../qtcore/qobject.html" translate="no">QObject</a></span> <span class="operator">*</span>parent)
+     : <span class="type"><a href="../qtcore/qobject.html" translate="no">QObject</a></span>{parent}
+ {
+     connect( <span class="operator">&amp;</span>m_queuesTimer<span class="operator">,</span> <span class="operator">&amp;</span><span class="type"><a href="../qtcore/qtimer.html" translate="no">QTimer</a></span><span class="operator">::</span>timeout<span class="operator">,</span> <span class="keyword">this</span><span class="operator">,</span> <span class="operator">[</span><span class="keyword">this</span><span class="operator">]</span>(){
+         <span class="keyword">if</span> ( m_buildingsQueue<span class="operator">.</span>isEmpty() <span class="operator">&amp;</span><span class="operator">&amp;</span> m_mapsQueue<span class="operator">.</span>isEmpty() ) {
+             m_queuesTimer<span class="operator">.</span>stop();
+         }
+         <span class="keyword">else</span> {
+
+ <span class="preprocessor">#ifdef QT_DEBUG</span>
+             <span class="keyword">const</span> <span class="type">int</span> numConcurrentRequests <span class="operator">=</span> <span class="number">1</span>;
+ <span class="preprocessor">#else</span>
+             <span class="keyword">const</span> <span class="type">int</span> numConcurrentRequests <span class="operator">=</span> <span class="number">6</span>;
+ <span class="preprocessor">#endif</span>
+             <span class="keyword">if</span> ( <span class="operator">!</span>m_buildingsQueue<span class="operator">.</span>isEmpty() <span class="operator">&amp;</span><span class="operator">&amp;</span> m_buildingsNumberOfRequestsInFlight <span class="operator">&lt;</span> numConcurrentRequests )
+             {
+                 getBuildingsDataRequest(m_buildingsQueue<span class="operator">.</span>dequeue());
+                 <span class="operator">+</span><span class="operator">+</span>m_buildingsNumberOfRequestsInFlight;
+             }
+
+             <span class="keyword">if</span> ( <span class="operator">!</span>m_mapsQueue<span class="operator">.</span>isEmpty() <span class="operator">&amp;</span><span class="operator">&amp;</span> m_mapsNumberOfRequestsInFlight <span class="operator">&lt;</span> numConcurrentRequests )
+             {
+                 getMapsDataRequest(m_mapsQueue<span class="operator">.</span>dequeue());
+                 <span class="operator">+</span><span class="operator">+</span>m_mapsNumberOfRequestsInFlight;
+             }
+         }
+     });
+     m_queuesTimer<span class="operator">.</span>setInterval(<span class="number">0</span>);
+</pre>
+<h5 id="fetching-and-parsing-data">Fetching and parsing data</h5>
+<p>A custom request handler class is implemented for fetching the data from the OSM building and map servers.</p>
+<pre class="cpp" translate="no">
+ <span class="type">void</span> OSMRequest<span class="operator">::</span>getBuildingsData(<span class="keyword">const</span> <span class="type"><a href="../qtcore/qqueue.html" translate="no">QQueue</a></span><span class="operator">&lt;</span>OSMTileData<span class="operator">&gt;</span> <span class="operator">&amp;</span>buildingsQueue) {
+
+     <span class="keyword">if</span> ( buildingsQueue<span class="operator">.</span>isEmpty() )
+         <span class="keyword">return</span>;
+     m_buildingsQueue <span class="operator">=</span> buildingsQueue;
+     <span class="keyword">if</span> ( <span class="operator">!</span>m_queuesTimer<span class="operator">.</span>isActive() )
+         m_queuesTimer<span class="operator">.</span>start();
+ }
+
+ <span class="type">void</span> OSMRequest<span class="operator">::</span>getBuildingsDataRequest(<span class="keyword">const</span> OSMTileData <span class="operator">&amp;</span>tile)
+ {
+     <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span> fileName <span class="operator">=</span> <span class="string">&quot;data/&quot;</span> <span class="operator">+</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>ZoomLevel) <span class="operator">+</span> <span class="string">&quot;,&quot;</span> <span class="operator">+</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>TileX) <span class="operator">+</span> <span class="string">&quot;,&quot;</span>
+                        <span class="operator">+</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>TileY) <span class="operator">+</span> <span class="string">&quot;.json&quot;</span>;
+     <span class="type"><a href="../qtcore/qfileinfo.html" translate="no">QFileInfo</a></span> file(fileName);
+     <span class="keyword">if</span> ( file<span class="operator">.</span>size() )
+     {
+         <span class="type"><a href="../qtcore/qfile.html" translate="no">QFile</a></span> file(fileName);
+         <span class="keyword">if</span> (file<span class="operator">.</span>open(<span class="type"><a href="../qtcore/qfile.html" translate="no">QFile</a></span><span class="operator">::</span>ReadOnly)){
+             <span class="type"><a href="../qtcore/qbytearray.html" translate="no">QByteArray</a></span> data <span class="operator">=</span> file<span class="operator">.</span>readAll();
+             file<span class="operator">.</span>close();
+             <span class="keyword">emit</span> buildingsDataReady( importGeoJson(<span class="type"><a href="../qtcore/qjsondocument.html" translate="no">QJsonDocument</a></span><span class="operator">::</span>fromJson( data ))<span class="operator">,</span> tile<span class="operator">.</span>TileX<span class="operator">,</span> tile<span class="operator">.</span>TileY<span class="operator">,</span> tile<span class="operator">.</span>ZoomLevel );
+             <span class="operator">-</span><span class="operator">-</span>m_buildingsNumberOfRequestsInFlight;
+             <span class="keyword">return</span>;
+         }
+     }
+
+     <span class="type"><a href="../qtcore/qurl.html" translate="no">QUrl</a></span> url <span class="operator">=</span> <span class="type"><a href="../qtcore/qurl.html" translate="no">QUrl</a></span>(tr(m_uRL_OSMB_JSON)<span class="operator">.</span>arg(<span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>ZoomLevel)<span class="operator">,</span><span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>TileX)<span class="operator">,</span><span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>TileY)) );
+     <span class="type"><a href="../qtnetwork/qnetworkreply.html" translate="no">QNetworkReply</a></span> <span class="operator">*</span> reply <span class="operator">=</span> m_networkAccessManager<span class="operator">.</span>get( <span class="type"><a href="../qtnetwork/qnetworkrequest.html" translate="no">QNetworkRequest</a></span>(url));
+     connect( reply<span class="operator">,</span> <span class="operator">&amp;</span><span class="type"><a href="../qtnetwork/qnetworkreply.html" translate="no">QNetworkReply</a></span><span class="operator">::</span>finished<span class="operator">,</span> <span class="keyword">this</span><span class="operator">,</span> <span class="operator">[</span><span class="keyword">this</span><span class="operator">,</span> reply<span class="operator">,</span> tile<span class="operator">,</span> url<span class="operator">]</span>(){
+         reply<span class="operator">-</span><span class="operator">&gt;</span>deleteLater();
+         <span class="keyword">if</span> ( reply<span class="operator">-</span><span class="operator">&gt;</span>error() <span class="operator">=</span><span class="operator">=</span> <span class="type"><a href="../qtnetwork/qnetworkreply.html" translate="no">QNetworkReply</a></span><span class="operator">::</span>NoError ) {
+             <span class="type"><a href="../qtcore/qbytearray.html" translate="no">QByteArray</a></span> data <span class="operator">=</span> reply<span class="operator">-</span><span class="operator">&gt;</span>readAll();
+             <span class="keyword">emit</span> buildingsDataReady( importGeoJson(<span class="type"><a href="../qtcore/qjsondocument.html" translate="no">QJsonDocument</a></span><span class="operator">::</span>fromJson( data ))<span class="operator">,</span> tile<span class="operator">.</span>TileX<span class="operator">,</span> tile<span class="operator">.</span>TileY<span class="operator">,</span> tile<span class="operator">.</span>ZoomLevel );
+         }<span class="keyword">else</span> {
+             <a href="../qtcore/qtlogging.html#qWarning" translate="no">qWarning</a>() <span class="operator">&lt;</span><span class="operator">&lt;</span> <span class="string">&quot;OSMRequest::getBuildingsData&quot;</span> <span class="operator">&lt;</span><span class="operator">&lt;</span> reply<span class="operator">-</span><span class="operator">&gt;</span>error() <span class="operator">&lt;</span><span class="operator">&lt;</span> url;
+         }
+         <span class="operator">-</span><span class="operator">-</span>m_buildingsNumberOfRequestsInFlight;
+     } );
+ <span class="type">void</span> OSMRequest<span class="operator">::</span>getMapsData(<span class="keyword">const</span> <span class="type"><a href="../qtcore/qqueue.html" translate="no">QQueue</a></span><span class="operator">&lt;</span>OSMTileData<span class="operator">&gt;</span> <span class="operator">&amp;</span>mapsQueue) {
+
+     <span class="keyword">if</span> ( mapsQueue<span class="operator">.</span>isEmpty() )
+         <span class="keyword">return</span>;
+     m_mapsQueue <span class="operator">=</span> mapsQueue;
+     <span class="keyword">if</span> ( <span class="operator">!</span>m_queuesTimer<span class="operator">.</span>isActive() )
+         m_queuesTimer<span class="operator">.</span>start();
+ }
+
+ <span class="type">void</span> OSMRequest<span class="operator">::</span>getMapsDataRequest(<span class="keyword">const</span> OSMTileData <span class="operator">&amp;</span>tile)
+ {
+     <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span> fileName <span class="operator">=</span> <span class="string">&quot;data/&quot;</span> <span class="operator">+</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>ZoomLevel) <span class="operator">+</span> <span class="string">&quot;,&quot;</span> <span class="operator">+</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>TileX)
+                        <span class="operator">+</span> <span class="string">&quot;,&quot;</span> <span class="operator">+</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>TileY) <span class="operator">+</span> <span class="string">&quot;.png&quot;</span>;
+     <span class="type"><a href="../qtcore/qfileinfo.html" translate="no">QFileInfo</a></span> file(fileName);
+     <span class="keyword">if</span> ( file<span class="operator">.</span>size() )
+     {
+         <span class="type"><a href="../qtcore/qfile.html" translate="no">QFile</a></span> file(fileName);
+         <span class="keyword">if</span> (file<span class="operator">.</span>open(<span class="type"><a href="../qtcore/qfile.html" translate="no">QFile</a></span><span class="operator">::</span>ReadOnly)){
+             <span class="type"><a href="../qtcore/qbytearray.html" translate="no">QByteArray</a></span> data <span class="operator">=</span> file<span class="operator">.</span>readAll();
+             file<span class="operator">.</span>close();
+             <span class="keyword">emit</span> mapsDataReady(  data<span class="operator">,</span> tile<span class="operator">.</span>TileX<span class="operator">,</span> tile<span class="operator">.</span>TileY<span class="operator">,</span> tile<span class="operator">.</span>ZoomLevel );
+             <span class="operator">-</span><span class="operator">-</span>m_mapsNumberOfRequestsInFlight;
+             <span class="keyword">return</span>;
+         }
+     }
+
+     <span class="type"><a href="../qtcore/qurl.html" translate="no">QUrl</a></span> url <span class="operator">=</span> <span class="type"><a href="../qtcore/qurl.html" translate="no">QUrl</a></span>(tr(m_uRL_OSMB_MAP)<span class="operator">.</span>arg(<span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>ZoomLevel)<span class="operator">,</span><span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>TileX)<span class="operator">,</span><span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tile<span class="operator">.</span>TileY)) );
+     <span class="type"><a href="../qtnetwork/qnetworkreply.html" translate="no">QNetworkReply</a></span> <span class="operator">*</span> reply <span class="operator">=</span> m_networkAccessManager<span class="operator">.</span>get( <span class="type"><a href="../qtnetwork/qnetworkrequest.html" translate="no">QNetworkRequest</a></span>(url));
+     connect( reply<span class="operator">,</span> <span class="operator">&amp;</span><span class="type"><a href="../qtnetwork/qnetworkreply.html" translate="no">QNetworkReply</a></span><span class="operator">::</span>finished<span class="operator">,</span> <span class="keyword">this</span><span class="operator">,</span> <span class="operator">[</span><span class="keyword">this</span><span class="operator">,</span> reply<span class="operator">,</span> tile<span class="operator">,</span> url<span class="operator">]</span>(){
+         reply<span class="operator">-</span><span class="operator">&gt;</span>deleteLater();
+         <span class="keyword">if</span> ( reply<span class="operator">-</span><span class="operator">&gt;</span>error() <span class="operator">=</span><span class="operator">=</span> <span class="type"><a href="../qtnetwork/qnetworkreply.html" translate="no">QNetworkReply</a></span><span class="operator">::</span>NoError ) {
+             <span class="type"><a href="../qtcore/qbytearray.html" translate="no">QByteArray</a></span> data <span class="operator">=</span> reply<span class="operator">-</span><span class="operator">&gt;</span>readAll();
+             <span class="keyword">emit</span> mapsDataReady( data<span class="operator">,</span> tile<span class="operator">.</span>TileX<span class="operator">,</span> tile<span class="operator">.</span>TileY<span class="operator">,</span> tile<span class="operator">.</span>ZoomLevel );
+         }<span class="keyword">else</span> {
+             <a href="../qtcore/qtlogging.html#qWarning" translate="no">qWarning</a>() <span class="operator">&lt;</span><span class="operator">&lt;</span> <span class="string">&quot;OSMRequest::getMapsDataRequest&quot;</span> <span class="operator">&lt;</span><span class="operator">&lt;</span> reply<span class="operator">-</span><span class="operator">&gt;</span>error() <span class="operator">&lt;</span><span class="operator">&lt;</span> url;
+         }
+         <span class="operator">-</span><span class="operator">-</span>m_mapsNumberOfRequestsInFlight;
+     } );
+</pre>
+<p>The application parses the online data to convert it to a <a href="../qtcore/qvariant.html" translate="no">QVariant</a> list of keys and values in geo formats such as <a href="../qtpositioning/qgeopolygon.html" translate="no">QGeoPolygon</a>.</p>
+<pre class="cpp" translate="no">
+             <span class="keyword">emit</span> buildingsDataReady( importGeoJson(<span class="type"><a href="../qtcore/qjsondocument.html" translate="no">QJsonDocument</a></span><span class="operator">::</span>fromJson( data ))<span class="operator">,</span> tile<span class="operator">.</span>TileX<span class="operator">,</span> tile<span class="operator">.</span>TileY<span class="operator">,</span> tile<span class="operator">.</span>ZoomLevel );
+             <span class="operator">-</span><span class="operator">-</span>m_buildingsNumberOfRequestsInFlight;
+</pre>
+<p>The parsed building data is sent to a custom geometry item to convert the geo coordinates to 3D coordinates.</p>
+<pre class="cpp" translate="no">
+     constexpr <span class="keyword">auto</span> convertGeoCoordToVertexPosition <span class="operator">=</span> <span class="operator">[</span><span class="operator">]</span>(<span class="keyword">const</span> <span class="type">float</span> lat<span class="operator">,</span> <span class="keyword">const</span> <span class="type">float</span> lon) <span class="operator">-</span><span class="operator">&gt;</span> QVector3D {
+
+         <span class="keyword">const</span> <span class="type">double</span> scale <span class="operator">=</span> <span class="number">1.212</span>;
+         <span class="keyword">const</span> <span class="type">double</span> geoToPositionScale <span class="operator">=</span> <span class="number">1000000</span> <span class="operator">*</span> scale;
+         <span class="keyword">const</span> <span class="type">double</span> XOffsetFromCenter <span class="operator">=</span> <span class="number">537277</span> <span class="operator">*</span> scale;
+         <span class="keyword">const</span> <span class="type">double</span> YOffsetFromCenter <span class="operator">=</span> <span class="number">327957</span> <span class="operator">*</span> scale;
+         <span class="type">double</span> x <span class="operator">=</span> (lon<span class="operator">/</span><span class="number">360.0</span> <span class="operator">+</span> <span class="number">0.5</span>) <span class="operator">*</span> geoToPositionScale;
+         <span class="type">double</span> y <span class="operator">=</span> (<span class="number">1.0</span><span class="operator">-</span>log(<a href="../qtcore/qtmath.html#qTan" translate="no">qTan</a>(<a href="../qtcore/qtmath.html#qDegreesToRadians" translate="no">qDegreesToRadians</a>(lat)) <span class="operator">+</span> <span class="number">1.0</span> <span class="operator">/</span> <a href="../qtcore/qtmath.html#qCos" translate="no">qCos</a>(<a href="../qtcore/qtmath.html#qDegreesToRadians" translate="no">qDegreesToRadians</a>(lat))) <span class="operator">/</span> M_PI) <span class="operator">*</span> <span class="number">0.5</span> <span class="operator">*</span> geoToPositionScale;
+         <span class="keyword">return</span> QVector3D( x <span class="operator">-</span> XOffsetFromCenter<span class="operator">,</span> YOffsetFromCenter <span class="operator">-</span> y<span class="operator">,</span> <span class="number">0.0</span> );
+     };
+</pre>
+<p>The required data for the index and vertex buffers, such as position, normals, tangents, and UV coordinates, is generated.</p>
+<pre class="cpp" translate="no">
+     <span class="keyword">for</span> ( <span class="keyword">const</span> <span class="type"><a href="../qtcore/qvariant.html" translate="no">QVariant</a></span> <span class="operator">&amp;</span>baseData : geoVariantsList ) {
+         <span class="keyword">for</span> ( <span class="keyword">const</span> <span class="type"><a href="../qtcore/qvariant.html" translate="no">QVariant</a></span> <span class="operator">&amp;</span>dataValue : baseData<span class="operator">.</span>toMap()<span class="operator">[</span><span class="string">&quot;data&quot;</span><span class="operator">]</span><span class="operator">.</span>toList() ) {
+             <span class="keyword">auto</span> featureMap <span class="operator">=</span> dataValue<span class="operator">.</span>toMap();
+             <span class="keyword">auto</span> properties <span class="operator">=</span> featureMap<span class="operator">[</span><span class="string">&quot;properties&quot;</span><span class="operator">]</span><span class="operator">.</span>toMap();
+             <span class="keyword">auto</span> buildingCoords <span class="operator">=</span> featureMap<span class="operator">[</span><span class="string">&quot;data&quot;</span><span class="operator">]</span><span class="operator">.</span>value<span class="operator">&lt;</span><span class="type"><a href="../qtpositioning/qgeopolygon.html" translate="no">QGeoPolygon</a></span><span class="operator">&gt;</span>()<span class="operator">.</span>perimeter();
+             <span class="type">float</span> height <span class="operator">=</span> <span class="number">0.15</span> <span class="operator">*</span> properties<span class="operator">[</span><span class="string">&quot;height&quot;</span><span class="operator">]</span><span class="operator">.</span>toLongLong();
+             <span class="type">float</span> levels <span class="operator">=</span> <span class="keyword">static_cast</span><span class="operator">&lt;</span><span class="type">float</span><span class="operator">&gt;</span>(properties<span class="operator">[</span><span class="string">&quot;levels&quot;</span><span class="operator">]</span><span class="operator">.</span>toLongLong());
+             <span class="type"><a href="../qtgui/qcolor.html" translate="no">QColor</a></span> color <span class="operator">=</span> <span class="type"><a href="../qtgui/qcolor.html" translate="no">QColor</a></span><span class="operator">::</span>fromString( properties<span class="operator">[</span><span class="string">&quot;color&quot;</span><span class="operator">]</span><span class="operator">.</span>toString());
+             <span class="keyword">if</span> ( <span class="operator">!</span>color<span class="operator">.</span>isValid() <span class="operator">|</span><span class="operator">|</span> color <span class="operator">=</span><span class="operator">=</span> <span class="type"><a href="../qtgui/qcolor.html" translate="no">QColor</a></span><span class="operator">::</span>fromString(<span class="string">&quot;black&quot;</span>) )
+                 color <span class="operator">=</span> <span class="type"><a href="../qtgui/qcolor.html" translate="no">QColor</a></span>(<span class="string">&quot;white&quot;</span>);
+             <span class="type"><a href="../qtgui/qcolor.html" translate="no">QColor</a></span> roofColor <span class="operator">=</span> <span class="type"><a href="../qtgui/qcolor.html" translate="no">QColor</a></span><span class="operator">::</span>fromString( properties<span class="operator">[</span><span class="string">&quot;roofColor&quot;</span><span class="operator">]</span><span class="operator">.</span>toString());
+             <span class="keyword">if</span> ( <span class="operator">!</span>roofColor<span class="operator">.</span>isValid() <span class="operator">|</span><span class="operator">|</span> roofColor <span class="operator">=</span><span class="operator">=</span> <span class="type"><a href="../qtgui/qcolor.html" translate="no">QColor</a></span><span class="operator">::</span>fromString(<span class="string">&quot;black&quot;</span>) )
+                 roofColor <span class="operator">=</span> color;
+
+             QVector3D subsetMinBound <span class="operator">=</span> QVector3D(maxFloat<span class="operator">,</span> maxFloat<span class="operator">,</span> maxFloat);
+             QVector3D subsetMaxBound <span class="operator">=</span> QVector3D(minFloat<span class="operator">,</span> minFloat<span class="operator">,</span> minFloat);
+
+             qsizetype numSubsetVertices <span class="operator">=</span> buildingCoords<span class="operator">.</span>size() <span class="operator">*</span> <span class="number">2</span>;
+             qsizetype lastVertexDataCount <span class="operator">=</span> vertexData<span class="operator">.</span>size();
+             qsizetype lastIndexDataCount <span class="operator">=</span> indexData<span class="operator">.</span>size();
+             vertexData<span class="operator">.</span>resize( lastVertexDataCount <span class="operator">+</span> numSubsetVertices <span class="operator">*</span> strideVertex );
+             indexData<span class="operator">.</span>resize( lastIndexDataCount <span class="operator">+</span> ( numSubsetVertices <span class="operator">-</span> <span class="number">2</span> ) <span class="operator">*</span> stridePermitive );
+
+             <span class="type">float</span> <span class="operator">*</span>vbPtr <span class="operator">=</span> <span class="operator">&amp;</span><span class="keyword">reinterpret_cast</span><span class="operator">&lt;</span><span class="type">float</span> <span class="operator">*</span><span class="operator">&gt;</span>(vertexData<span class="operator">.</span>data())<span class="operator">[</span>globalVertexCounter <span class="operator">*</span> striedVertexLen<span class="operator">]</span>;
+             uint32_t <span class="operator">*</span>ibPtr <span class="operator">=</span> <span class="operator">&amp;</span><span class="keyword">reinterpret_cast</span><span class="operator">&lt;</span>uint32_t <span class="operator">*</span><span class="operator">&gt;</span>(indexData<span class="operator">.</span>data())<span class="operator">[</span>globalPermitiveCounter <span class="operator">*</span> <span class="number">3</span><span class="operator">]</span>;
+
+             qsizetype subsetVertexCounter <span class="operator">=</span> <span class="number">0</span>;
+
+             QVector3D lastBaseVertexPos;
+             QVector3D lastExtrudedVertexPos;
+             QVector3D currentBaseVertexPos;
+             QVector3D currentExtrudedVertexPos;
+             QVector3D subsetPolygonCenter;
+
+             <span class="keyword">using</span> PolygonVertex <span class="operator">=</span> std<span class="operator">::</span>array<span class="operator">&lt;</span><span class="type">double</span><span class="operator">,</span> <span class="number">2</span><span class="operator">&gt;</span>;
+             <span class="keyword">using</span> PolygonVertices <span class="operator">=</span> std<span class="operator">::</span>vector<span class="operator">&lt;</span>PolygonVertex<span class="operator">&gt;</span>;
+
+             PolygonVertices roofPolygonVertices;
+
+             <span class="keyword">for</span> ( <span class="keyword">const</span> <span class="type"><a href="../qtpositioning/qgeocoordinate.html" translate="no">QGeoCoordinate</a></span> <span class="operator">&amp;</span>buildingPoint : buildingCoords ) {
+    ...
+                     std<span class="operator">::</span>vector<span class="operator">&lt;</span>PolygonVertices<span class="operator">&gt;</span> roofPolygonsVerices;
+                     roofPolygonsVerices<span class="operator">.</span>push_back( roofPolygonVertices );
+                     std<span class="operator">::</span>vector<span class="operator">&lt;</span>uint32_t<span class="operator">&gt;</span> roofIndices <span class="operator">=</span> mapbox<span class="operator">::</span>earcut<span class="operator">&lt;</span>uint32_t<span class="operator">&gt;</span>(roofPolygonsVerices);
+
+                     lastVertexDataCount <span class="operator">=</span> vertexData<span class="operator">.</span>size();
+                     lastIndexDataCount <span class="operator">=</span> indexData<span class="operator">.</span>size();
+                     vertexData<span class="operator">.</span>resize( lastVertexDataCount <span class="operator">+</span> roofPolygonVertices<span class="operator">.</span>size() <span class="operator">*</span> strideVertex );
+                     indexData<span class="operator">.</span>resize( lastIndexDataCount <span class="operator">+</span> roofIndices<span class="operator">.</span>size() <span class="operator">*</span> <span class="keyword">sizeof</span>(uint32_t) );
+
+                     vbPtr <span class="operator">=</span> <span class="operator">&amp;</span><span class="keyword">reinterpret_cast</span><span class="operator">&lt;</span><span class="type">float</span> <span class="operator">*</span><span class="operator">&gt;</span>(vertexData<span class="operator">.</span>data())<span class="operator">[</span>globalVertexCounter <span class="operator">*</span> striedVertexLen<span class="operator">]</span>;
+                     ibPtr <span class="operator">=</span> <span class="operator">&amp;</span><span class="keyword">reinterpret_cast</span><span class="operator">&lt;</span>uint32_t <span class="operator">*</span><span class="operator">&gt;</span>(indexData<span class="operator">.</span>data())<span class="operator">[</span>globalPermitiveCounter <span class="operator">*</span> <span class="number">3</span><span class="operator">]</span>;
+
+                     <span class="keyword">for</span> ( <span class="keyword">const</span> uint32_t <span class="operator">&amp;</span>roofIndex : roofIndices ) {
+                         <span class="operator">*</span>ibPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> roofIndex <span class="operator">+</span> globalVertexCounter;
+                     }
+                     qsizetype roofPermitiveCount <span class="operator">=</span> roofIndices<span class="operator">.</span>size() <span class="operator">/</span> <span class="number">3</span>;
+                     globalPermitiveCounter <span class="operator">+</span><span class="operator">=</span> roofPermitiveCount;
+
+                     <span class="keyword">for</span> ( <span class="keyword">const</span> PolygonVertex <span class="operator">&amp;</span>polygonVertex : roofPolygonVertices ) {
+
+                         <span class="comment">//position</span>
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> polygonVertex<span class="operator">.</span>at(<span class="number">0</span>);
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> polygonVertex<span class="operator">.</span>at(<span class="number">1</span>);
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> height;
+
+                         <span class="comment">//normal</span>
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">0.0</span>;
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">0.0</span>;
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">1.0</span>;
+
+                         <span class="comment">//tangent</span>
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">1.0</span>;
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">0.0</span>;
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">0.0</span>;
+
+                         <span class="comment">//binormal</span>
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">0.0</span>;
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">1.0</span>;
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">0.0</span>;
+
+                         <span class="comment">//color/</span>
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> roofColor<span class="operator">.</span>redF();
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> roofColor<span class="operator">.</span>greenF();
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> roofColor<span class="operator">.</span>blueF();
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">1.0</span>;
+
+                         <span class="comment">//texcoord</span>
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">1.0</span>;
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">1.0</span>;
+
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">0.0</span>;
+                         <span class="operator">*</span>vbPtr<span class="operator">+</span><span class="operator">+</span> <span class="operator">=</span> <span class="number">1.0</span>;
+
+                         <span class="operator">+</span><span class="operator">+</span>subsetVertexCounter;
+                         <span class="operator">+</span><span class="operator">+</span>globalVertexCounter;
+                     }
+
+                 }
+
+             }
+         }
+     }
+
+     clear();
+</pre>
+<p>The downloaded PNG data is sent to a custom <a href="../qtquick3d/qquick3dtexturedata.html" translate="no">QQuick3DTextureData</a> item to convert the PNG format to a texture for map tiles.</p>
+<pre class="cpp" translate="no">
+ <span class="type">void</span> CustomTextureData<span class="operator">::</span>setImageData(<span class="keyword">const</span> <span class="type"><a href="../qtcore/qbytearray.html" translate="no">QByteArray</a></span> <span class="operator">&amp;</span>data)
+ {
+     <span class="type"><a href="../qtgui/qimage.html" translate="no">QImage</a></span> image <span class="operator">=</span> <span class="type"><a href="../qtgui/qimage.html" translate="no">QImage</a></span><span class="operator">::</span>fromData(data)<span class="operator">.</span>convertToFormat(<span class="type"><a href="../qtgui/qimage.html" translate="no">QImage</a></span><span class="operator">::</span>Format_RGBA8888);
+     setTextureData( <span class="type"><a href="../qtcore/qbytearray.html" translate="no">QByteArray</a></span>(<span class="keyword">reinterpret_cast</span><span class="operator">&lt;</span><span class="keyword">const</span> <span class="type">char</span><span class="operator">*</span><span class="operator">&gt;</span>(image<span class="operator">.</span>constBits())<span class="operator">,</span> image<span class="operator">.</span>sizeInBytes()) );
+     setSize( image<span class="operator">.</span>size() );
+     setHasTransparency(<span class="keyword">false</span>);
+     setFormat(Format<span class="operator">::</span>RGBA8);
+ }
+</pre>
+<p>The application uses camera position, orientation, zoom level, and tilt to find the nearest tiles in the view.</p>
+<pre class="cpp" translate="no">
+ <span class="type">void</span> OSMManager<span class="operator">::</span>setCameraProperties(<span class="keyword">const</span> QVector3D <span class="operator">&amp;</span>position<span class="operator">,</span> <span class="keyword">const</span> QVector3D <span class="operator">&amp;</span>right<span class="operator">,</span>
+                                     <span class="type">float</span> cameraZoom<span class="operator">,</span> <span class="type">float</span> minimunZoom<span class="operator">,</span> <span class="type">float</span> maximumZoom<span class="operator">,</span>
+                                     <span class="type">float</span> cameraTilt<span class="operator">,</span> <span class="type">float</span> minimumTilt<span class="operator">,</span> <span class="type">float</span> maxmumTilt)
+ {
+
+     <span class="type">float</span> tiltFactor <span class="operator">=</span> (cameraTilt <span class="operator">-</span> minimumTilt) <span class="operator">/</span> <a href="../qtcore/qtminmax-qtcore-proxy.html#qMax" translate="no">qMax</a>(maxmumTilt <span class="operator">-</span> minimumTilt<span class="operator">,</span> <span class="number">1.0</span>);
+     <span class="type">float</span> zoomFactor <span class="operator">=</span> (cameraZoom <span class="operator">-</span> minimunZoom) <span class="operator">/</span> <a href="../qtcore/qtminmax-qtcore-proxy.html#qMax" translate="no">qMax</a>(maximumZoom <span class="operator">-</span> minimunZoom<span class="operator">,</span> <span class="number">1.0</span>);
+
+     QVector3D forwardVector <span class="operator">=</span> QVector3D<span class="operator">::</span>crossProduct(right<span class="operator">,</span>
+                                                       QVector3D(<span class="number">0.0</span><span class="operator">,</span> <span class="number">0.0</span><span class="operator">,</span> <span class="operator">-</span><span class="number">1.0</span>))<span class="operator">.</span>normalized(); <span class="comment">//Forward vector align to the XY plane</span>
+     QVector3D projectionOfForwardOnXY <span class="operator">=</span> position
+             <span class="operator">+</span> forwardVector <span class="operator">*</span> tiltFactor <span class="operator">*</span> zoomFactor <span class="operator">*</span> <span class="number">50.0</span>;
+
+     <span class="type"><a href="../qtcore/qqueue.html" translate="no">QQueue</a></span><span class="operator">&lt;</span>OSMTileData<span class="operator">&gt;</span> queue;
+     <span class="keyword">for</span> ( <span class="type">int</span> fowardIndex <span class="operator">=</span> <span class="operator">-</span><span class="number">20</span>; fowardIndex <span class="operator">&lt;</span><span class="operator">=</span> <span class="number">20</span>; <span class="operator">+</span><span class="operator">+</span>fowardIndex ){
+         <span class="keyword">for</span> ( <span class="type">int</span> sidewardIndex <span class="operator">=</span> <span class="operator">-</span><span class="number">20</span>; sidewardIndex <span class="operator">&lt;</span><span class="operator">=</span> <span class="number">20</span>; <span class="operator">+</span><span class="operator">+</span>sidewardIndex ){
+             QVector3D transferedPosition <span class="operator">=</span> projectionOfForwardOnXY <span class="operator">+</span> QVector3D(<span class="type">float</span>(m_tileSizeX <span class="operator">*</span> sidewardIndex)
+                                                                                <span class="operator">,</span> <span class="type">float</span>(m_tileSizeY <span class="operator">*</span> fowardIndex)<span class="operator">,</span> <span class="number">0.0</span>);
+             addBuildingRequestToQueue(queue<span class="operator">,</span> m_startBuildingTileX <span class="operator">+</span> <span class="type">int</span>(transferedPosition<span class="operator">.</span>x() <span class="operator">/</span> m_tileSizeX)<span class="operator">,</span>
+                                 m_startBuildingTileY <span class="operator">-</span> <span class="type">int</span>(transferedPosition<span class="operator">.</span>y() <span class="operator">/</span> m_tileSizeY));
+         }
+     }
+
+     <span class="type">int</span> projectedTileX <span class="operator">=</span> m_startBuildingTileX <span class="operator">+</span> <span class="type">int</span>(projectionOfForwardOnXY<span class="operator">.</span>x() <span class="operator">/</span> m_tileSizeX);
+     <span class="type">int</span> projectedTileY <span class="operator">=</span> m_startBuildingTileY <span class="operator">-</span> <span class="type">int</span>(projectionOfForwardOnXY<span class="operator">.</span>y() <span class="operator">/</span> m_tileSizeY);
+
+     std<span class="operator">::</span>sort(queue<span class="operator">.</span>begin()<span class="operator">,</span> queue<span class="operator">.</span>end()<span class="operator">,</span> <span class="operator">[</span>projectedTileX<span class="operator">,</span> projectedTileY<span class="operator">]</span>(<span class="keyword">const</span> OSMTileData <span class="operator">&amp;</span>v1<span class="operator">,</span> <span class="keyword">const</span> OSMTileData <span class="operator">&amp;</span>v2)<span class="operator">-</span><span class="operator">&gt;</span><span class="type">bool</span>{
+         <span class="keyword">return</span> <a href="../qtcore/qtmath.html#qSqrt" translate="no">qSqrt</a>(<a href="../qtcore/qtmath.html#qPow" translate="no">qPow</a>(v1<span class="operator">.</span>TileX <span class="operator">-</span> projectedTileX<span class="operator">,</span> <span class="number">2</span>)
+                      <span class="operator">+</span> <a href="../qtcore/qtmath.html#qPow" translate="no">qPow</a>(v1<span class="operator">.</span>TileY <span class="operator">-</span> projectedTileY<span class="operator">,</span> <span class="number">2</span>))
+                <span class="operator">&lt;</span>
+               <a href="../qtcore/qtmath.html#qSqrt" translate="no">qSqrt</a>(<a href="../qtcore/qtmath.html#qPow" translate="no">qPow</a>(v2<span class="operator">.</span>TileX <span class="operator">-</span> projectedTileX<span class="operator">,</span> <span class="number">2</span>)
+                         <span class="operator">+</span> <a href="../qtcore/qtmath.html#qPow" translate="no">qPow</a>(v2<span class="operator">.</span>TileY <span class="operator">-</span> projectedTileY<span class="operator">,</span> <span class="number">2</span>));
+     });
+
+     m_request<span class="operator">-</span><span class="operator">&gt;</span>getBuildingsData( queue );
+     m_request<span class="operator">-</span><span class="operator">&gt;</span>getMapsData( queue );
+</pre>
+<p>Generates the tiles request queue.</p>
+<pre class="cpp" translate="no">
+ <span class="type">void</span> OSMManager<span class="operator">::</span>addBuildingRequestToQueue(<span class="type"><a href="../qtcore/qqueue.html" translate="no">QQueue</a></span><span class="operator">&lt;</span>OSMTileData<span class="operator">&gt;</span> <span class="operator">&amp;</span>queue<span class="operator">,</span> <span class="type">int</span> tileX<span class="operator">,</span> <span class="type">int</span> tileY<span class="operator">,</span> <span class="type">int</span> zoomLevel)
+ {
+     <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span> key <span class="operator">=</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tileX) <span class="operator">+</span> <span class="string">&quot;,&quot;</span> <span class="operator">+</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(tileY) <span class="operator">+</span> <span class="string">&quot;,&quot;</span> <span class="operator">+</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span><span class="operator">::</span>number(zoomLevel);
+     <span class="keyword">if</span> ( m_buildingsHash<span class="operator">.</span>contains( key ) )
+         <span class="keyword">return</span>;
+
+     OSMTileData tile;
+     tile<span class="operator">.</span>ZoomLevel <span class="operator">=</span> zoomLevel;
+     tile<span class="operator">.</span>TileX <span class="operator">=</span> tileX;
+     tile<span class="operator">.</span>TileY <span class="operator">=</span> tileY;
+     queue<span class="operator">.</span>append( tile );
+
+ }
+</pre>
+<h5 id="controls">Controls</h5>
+<p>When you run the application, use the following controls for navigation.</p>
+<div class="table"><table class="generic">
+ <thead><tr class="qt-style"><th ></th><th >Windows</th><th >Android</th></tr></thead>
+<tr valign="top" class="odd"><td >Pan</td><td >Left mouse button + drag</td><td >Drag</td></tr>
+<tr valign="top" class="even"><td >Zoom</td><td >Mouse wheel</td><td >Pinch</td></tr>
+<tr valign="top" class="odd"><td >Rotate</td><td >Right mouse button + drag</td><td >n/a</td></tr>
+</table></div>
+<pre class="cpp" translate="no">
+         <span class="type">OSMCameraController</span> {
+             <span class="name">id</span>: <span class="name">cameraController</span>
+             <span class="name">origin</span>: <span class="name">originNode</span>
+             <span class="name">camera</span>: <span class="name">cameraNode</span>
+         }
+</pre>
+<h5 id="rendering">Rendering</h5>
+<p>Every chunk of the map tile consists of a QML model (the 3D geometry) and a custom material which uses a rectangle as a base to render the tilemap texture.</p>
+<pre class="cpp" translate="no">
+         ...
+         <span class="name">id</span>: <span class="name">chunkModelMap</span>
+         <span class="type"><a href="../qt3d/qml-qt3d-core-node.html" translate="no">Node</a></span> {
+             property <span class="type">variant</span> <span class="name">mapData</span>: <span class="number">null</span>
+             property <span class="type">int</span> <span class="name">tileX</span>: <span class="number">0</span>
+             property <span class="type">int</span> <span class="name">tileY</span>: <span class="number">0</span>
+             property <span class="type">int</span> <span class="name">zoomLevel</span>: <span class="number">0</span>
+             <span class="type"><a href="../qtquick3d/qml-qtquick3d-model.html" translate="no">Model</a></span> {
+                 <span class="name">id</span>: <span class="name">basePlane</span>
+                 <span class="name">position</span>: <span class="name">Qt</span>.<span class="name">vector3d</span>( <span class="name">osmManager</span>.<span class="name">tileSizeX</span> <span class="operator">*</span> <span class="name">tileX</span>, <span class="name">osmManager</span>.<span class="name">tileSizeY</span> <span class="operator">*</span> -<span class="name">tileY</span>, <span class="number">0.0</span> )
+                 <span class="name">scale</span>: <span class="name">Qt</span>.<span class="name">vector3d</span>( <span class="name">osmManager</span>.<span class="name">tileSizeX</span> <span class="operator">/</span> <span class="number">100.</span>, <span class="name">osmManager</span>.<span class="name">tileSizeY</span> <span class="operator">/</span> <span class="number">100.</span>, <span class="number">0.5</span>)
+                 <span class="name">source</span>: <span class="string">&quot;#Rectangle&quot;</span>
+                 <span class="name">materials</span>: [
+                     <span class="type"><a href="../qtquick3d/qml-qtquick3d-custommaterial.html" translate="no">CustomMaterial</a></span> {
+                         property <span class="type"><a href="../qtquick3d/qml-qtquick3d-textureinput.html" translate="no">TextureInput</a></span> <span class="name">tileTexture</span>: <span class="name">TextureInput</span> {
+                             <span class="name">enabled</span>: <span class="number">true</span>
+                             <span class="name">texture</span>: <span class="name">Texture</span> {
+                                 <span class="name">textureData</span>: <span class="name">CustomTextureData</span> {
+                                     <span class="name">Component</span>.onCompleted: <span class="name">setImageData</span>( <span class="name">mapData</span> )
+                                 } }
+                         }
+                         <span class="name">shadingMode</span>: <span class="name">CustomMaterial</span>.<span class="name">Shaded</span>
+                         <span class="name">cullMode</span>: <span class="name">Material</span>.<span class="name">BackFaceCulling</span>
+                         <span class="name">fragmentShader</span>: <span class="string">&quot;customshadertiles.frag&quot;</span>
+                     }
+                 ]
+             }
+</pre>
+<p>The application uses custom geometry to render tile buildings.</p>
+<pre class="cpp" translate="no">
+         ...
+         <span class="name">id</span>: <span class="name">chunkModelBuilding</span>
+         <span class="type"><a href="../qt3d/qml-qt3d-core-node.html" translate="no">Node</a></span> {
+             property <span class="type">variant</span> <span class="name">geoVariantsList</span>: <span class="number">null</span>
+             property <span class="type">int</span> <span class="name">tileX</span>: <span class="number">0</span>
+             property <span class="type">int</span> <span class="name">tileY</span>: <span class="number">0</span>
+             property <span class="type">int</span> <span class="name">zoomLevel</span>: <span class="number">0</span>
+             <span class="type"><a href="../qtquick3d/qml-qtquick3d-model.html" translate="no">Model</a></span> {
+                 <span class="name">id</span>: <span class="name">model</span>
+                 <span class="name">scale</span>: <span class="name">Qt</span>.<span class="name">vector3d</span>(<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>)
+
+                 <span class="type">OSMGeometry</span> {
+                     <span class="name">id</span>: <span class="name">osmGeometry</span>
+                     <span class="name">Component</span>.onCompleted: <span class="name">updateData</span>( <span class="name">geoVariantsList</span> )
+                     <span class="name">onGeometryReady</span>:{
+                         <span class="name">model</span>.<span class="name">geometry</span> <span class="operator">=</span> <span class="name">osmGeometry</span>
+                     }
+                 }
+                 <span class="name">materials</span>: [
+
+                     <span class="type"><a href="../qtquick3d/qml-qtquick3d-custommaterial.html" translate="no">CustomMaterial</a></span> {
+                         <span class="name">shadingMode</span>: <span class="name">CustomMaterial</span>.<span class="name">Shaded</span>
+                         <span class="name">cullMode</span>: <span class="name">Material</span>.<span class="name">BackFaceCulling</span>
+                         <span class="name">vertexShader</span>: <span class="string">&quot;customshaderbuildings.vert&quot;</span>
+                         <span class="name">fragmentShader</span>: <span class="string">&quot;customshaderbuildings.frag&quot;</span>
+                     }
+                 ]
+             }
+</pre>
+<p>To render building parts such as rooftops with one draw call, a custom shader is used.</p>
+<pre class="cpp" translate="no">
+ // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+ VARYING vec4 color;
+
+ float rectangle(vec2 samplePosition, vec2 halfSize) {
+     vec2 componentWiseEdgeDistance = abs(samplePosition) - halfSize;
+     float outsideDistance = length(max(componentWiseEdgeDistance, 0.0));
+     float insideDistance = min(max(componentWiseEdgeDistance.x, componentWiseEdgeDistance.y), 0.0);
+     return outsideDistance + insideDistance;
+ }
+
+ void MAIN() {
+     vec2 tc = UV0;
+     vec2 uv = fract(tc * UV1.x); //UV1.x number of levels
+     uv = uv * 2.0 - 1.0;
+     uv.x = 0.0;
+     uv.y = smoothstep(0.0, 0.2, rectangle( vec2(uv.x, uv.y + 0.5), vec2(0.2)) );
+     BASE_COLOR = vec4(color.xyz * mix( clamp( ( vec3( 0.4, 0.4, 0.4 ) + tc.y)
+                                              * ( vec3( 0.6, 0.6, 0.6 ) + uv.y)
+                                              , 0.0, 1.0), vec3(1.0), UV1.y ), 1.0); // UV1.y as is roofTop
+     ROUGHNESS = 0.3;
+     METALNESS = 0.0;
+     FRESNEL_POWER = 1.0;
+ }
+</pre>
+<h4 id="running-the-example">Running the Example</h4>
+<p>To run the example from <a href="https://doc.qt.io/qtcreator/index.html" translate="no">Qt Creator</a>, open the <b translate="no">Welcome</b> mode and select the example from <b translate="no">Examples</b>. For more information, visit <a href="https://doc.qt.io/qtcreator/creator-build-example-application.html" translate="no">Building and Running an Example</a>.</p>
+<p><a href="https://code.qt.io/cgit/qt/qtdoc.git/tree/examples/demos/osmbuildings?h=6.7" translate="no">Example project @ code.qt.io</a></p>
+</div>
+<p><b>See also </b><a href="qmlapplications.html" translate="no">QML Applications</a>.</p>
+<!-- @@@demos/osmbuildings -->
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2024 <span translate="no">The Qt Company Ltd.</span>
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the <span translate="no">Free Software Foundation</span>.<br/>    <span translate="no">Qt</span> and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of <span translate="no">The Qt Company Ltd.</span> in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- lightningviewer.qdoc -->
+  <meta name="description" content="An application with a responsive UI showing lightning strikes on a map in real-time by combining Qt Quick, Qt Location, Qt Positioning and Qt Websockets.">
+  <title>Lightning Viewer | Qt 6.7</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="index.html" translate="no">Qt 6.7</a></li>
+<li>Lightning Viewer</li>
+<li id="buildversion">Qt 6.7.0 Reference Documentation</li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#running-the-example">Running the Example</a></li>
+<li class="level1"><a href="#overview">Overview</a></li>
+<li class="level1"><a href="#application-structure">Application Structure</a></li>
+<li class="level1"><a href="#lightning-strike-data-source">Lightning strike data source</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Lightning Viewer</h1>
+<!-- $$$demos/lightningviewer-brief -->
+<p>An application with a responsive UI showing lightning strikes on a map in real-time by combining Qt Quick, Qt Location, Qt Positioning and Qt Websockets.</p>
+<!-- @@@demos/lightningviewer -->
+<!-- $$$demos/lightningviewer-description -->
+<div class="descr" id="details">
+<p class="centerAlign"><img src="images/lightningviewer.jpg" alt="" /></p><h4 id="running-the-example">Running the Example</h4>
+<p>To run the example from <a href="https://doc.qt.io/qtcreator/index.html" translate="no">Qt Creator</a>, open the <b translate="no">Welcome</b> mode and select the example from <b translate="no">Examples</b>. For more information, visit <a href="https://doc.qt.io/qtcreator/creator-build-example-application.html" translate="no">Building and Running an Example</a>.</p>
+<h4 id="overview">Overview</h4>
+<p><i>Lightning Viewer</i> is an application that receives lightning strike data from a <a href="../qtwebsockets/qml-qtwebsockets-websocket.html" translate="no">WebSocket</a> and displays it on a map in real-time. It features a responsive UI that adapts well to mobile, tablet and desktop-sized screens in both landscape and portrait orientation. Lightning strikes appear as icons on the map, and a separate overlay shows the distance and time of the last strike. These data layers can be hidden and revealed with toggles that are accessed by pressing the map layers button. There is also a switch for switching between map types and a button that centers the map at the user's location.</p>
+<h4 id="application-structure">Application Structure</h4>
+<p>This application follows the Model-View-Controller (MVC) pattern. The <code translate="no">LightningItemModel</code> class serves as the model. It stores a list of <code translate="no">LightningItemData</code> objects and provides methods to insert new data and to get information about the latest strikes. The View is defined in multiple QML components that display the data and user interface and handle user interaction. The <code translate="no">Controller</code> class manages the data flow between the <code translate="no">LightningItemModel</code> and the QML components. The <code translate="no">LightningProvider</code> class opens a <a href="../qtwebsockets/qml-qtwebsockets-websocket.html" translate="no">WebSocket</a> connection to an online server from which it receives a JSON message for each occurring lightning strike. It parses the messages and passes the data on to the <code translate="no">LightningItemModel</code> via a signal connected to a slot in the <code translate="no">Controller</code>:</p>
+<pre class="cpp" translate="no">
+ connect(m_provider<span class="operator">.</span>get()<span class="operator">,</span> <span class="operator">&amp;</span>LightningProvider<span class="operator">::</span>dataReady<span class="operator">,</span> <span class="keyword">this</span><span class="operator">,</span> <span class="operator">&amp;</span>Controller<span class="operator">::</span>onDataReceived);
+</pre>
+<p>Each lightning strike is represented by a <code translate="no">LightningItemData</code> struct. It contains the timestamp, latitude and longitude of the strike, and includes methods returning its distance and direction from the user location provided as a <a href="../qtpositioning/qgeocoordinate.html" translate="no">QGeoCoordinate</a>. The <code translate="no">LastStrikeInfo</code> struct holds information about the last lightning strike.</p>
+<p><code translate="no">LightningView.qml</code> serves as the main view of the application. It is responsible for displaying the map and lightning data through the component <code translate="no">MapView.qml</code>, and the user controls through the component <code translate="no">ActionsLayer.qml</code>.</p>
+<p><code translate="no">MapView.qml</code> handles map zooming and panning. It uses a <a href="../qtpositioning/qml-qtpositioning-positionsource.html" translate="no">PositionSource</a> to obtain the user’s current location and a <a href="../qtlocation/qml-qtlocation-map.html" translate="no">Map</a> to display the map. Furthermore, it includes a <code translate="no">LightningMapLayer.qml</code> for displaying the lightning data and a <code translate="no">DistanceTimeLayer.qml</code> for showing information about the last lightning strike.</p>
+<p><code translate="no">ActionsLayer.qml</code> provides a button for recentering the map and a custom switch control, <code translate="no">SwitchMap.qml</code>, for switching between different map types. It also includes a map layers button that reveals the map layer toggles. These toggles are defined in <code translate="no">MapLayersItem.qml</code>. In landscape orientation they appear next to the map layers button, while in horizontal orientation they are placed in a <a href="../qtquickcontrols/qml-qtquick-controls-drawer.html" translate="no">Drawer</a> defined in <code translate="no">MapLayersDrawer.qml</code>.</p>
+<h4 id="lightning-strike-data-source">Lightning strike data source</h4>
+<p>The application receives lightning strike data from a server maintained by Qt. The server provides a WebSocket API accepting connections on the following URL:</p>
+<pre class="cpp" translate="no">
+ wss:<span class="comment">//ewea0y4bn0.execute-api.eu-north-1.amazonaws.com/production/</span>
+</pre>
+<p>When connected, the server accepts two different JSON messages, included in <code translate="no">lightningprovider.cpp</code> as strings with backslashes to escape double-quotes. The first message will trigger the API to forward real world lightning strikes. The availability or accuracy of this data can not be guaranteed, as it depends on third party data providers. As an alternative solution, the second message will trigger the API to send simulated lightning strike data:</p>
+<pre class="cpp" translate="no">
+ <span class="string">&quot;{\&quot;action\&quot;: \&quot;forwardlightningdata\&quot;}&quot;</span>
+ <span class="string">&quot;{\&quot;action\&quot;: \&quot;simulatelightningdata\&quot;}&quot;</span>
+</pre>
+<p><a href="https://code.qt.io/cgit/qt/qtdoc.git/tree/examples/demos/lightningviewer?h=6.7" translate="no">Example project @ code.qt.io</a></p>
+</div>
+<!-- @@@demos/lightningviewer -->
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2024 <span translate="no">The Qt Company Ltd.</span>
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the <span translate="no">Free Software Foundation</span>.<br/>    <span translate="no">Qt</span> and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of <span translate="no">The Qt Company Ltd.</span> in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>

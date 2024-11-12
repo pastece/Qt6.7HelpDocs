@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- stocqt.qdoc -->
+  <meta name="description" content="A configurable stock chart for 100 stocks.">
+  <title>StocQt | Qt 6.7</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="index.html" translate="no">Qt 6.7</a></li>
+<li>StocQt</li>
+<li id="buildversion">Qt 6.7.0 Reference Documentation</li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#running-the-example">Running the Example</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">StocQt</h1>
+<!-- $$$demos/stocqt-brief -->
+<p>A configurable stock chart for 100 stocks.</p>
+<!-- @@@demos/stocqt -->
+<!-- $$$demos/stocqt-description -->
+<div class="descr" id="details">
+<div class="border"><p class="centerAlign"><img src="images/qtquick-demo-stocqt.png" alt="" /></p></div><p>The <i>StocQt</i> application presents trend charts for a custom list of 100 stocks based on the NASDAQ-100. It allows the user to choose stocks from a list, and fetch the required data from the Financial Modeling Prep API using <a href="../qtnetwork/qnetworkaccessmanager.html" translate="no">QNetworkAccessManager</a> or from an offline dataset. The application also allows for favoriting up to 5 stocks for use in comparison charts.</p>
+<p>The application uses several custom types such as Search, StockCheckBox, StockChart, StockView, and SettingsView. These types present the stock data in a readable form and let the user customize the trend chart. For example, the user can choose to view the weekly, monthly, quarterly, or half-yearly trends in the stock price.</p>
+<p>The application uses a custom StockEngine singleton implemented in C++ for data handling, such as API requests and favoriting stocks. It implements a custom APIHandler class for fetching the online data.</p>
+<pre class="cpp" translate="no">
+ <span class="type">void</span> ApiHandler<span class="operator">::</span>stockHistory(<span class="keyword">const</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span> <span class="operator">&amp;</span>symbol<span class="operator">,</span>
+                               std<span class="operator">::</span>function<span class="operator">&lt;</span><span class="type">void</span>(<span class="type"><a href="../qtcore/qlist.html" translate="no">QList</a></span><span class="operator">&lt;</span>HistoryData<span class="operator">&gt;</span>)<span class="operator">&gt;</span> onComplete)
+ {
+     <span class="keyword">if</span> (m_useLiveData) {
+         <span class="type"><a href="../qtcore/qdatetime.html" translate="no">QDateTime</a></span> sixMonthsAgo <span class="operator">=</span> <span class="type"><a href="../qtcore/qdatetime.html" translate="no">QDateTime</a></span><span class="operator">::</span>currentDateTimeUtc()<span class="operator">.</span>addMonths(<span class="operator">-</span><span class="number">6</span>);
+         <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span> to <span class="operator">=</span> <span class="type"><a href="../qtcore/qdatetime.html" translate="no">QDateTime</a></span><span class="operator">::</span>currentDateTimeUtc()<span class="operator">.</span>toString(m_dateFormat);
+         <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span> from <span class="operator">=</span> sixMonthsAgo<span class="operator">.</span>toString(m_dateFormat);
+
+         <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span> url <span class="operator">=</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span>(<span class="string">&quot;https://financialmodelingprep.com/api/v3/historical-price-full/&quot;</span>
+                               <span class="string">&quot;%1?from=%2&amp;to=%3&amp;apikey=%4&quot;</span>)
+                           <span class="operator">.</span>arg(symbol<span class="operator">,</span> from<span class="operator">,</span> to<span class="operator">,</span> m_apiKey);
+
+         m_getRequest<span class="operator">.</span>setUrl(<span class="type"><a href="../qtcore/qurl.html" translate="no">QUrl</a></span>(url));
+         <span class="type"><a href="../qtnetwork/qnetworkreply.html" translate="no">QNetworkReply</a></span> <span class="operator">*</span>reply <span class="operator">=</span> m_accessManager<span class="operator">.</span>get(m_getRequest);
+
+         connect(reply<span class="operator">,</span> <span class="operator">&amp;</span><span class="type"><a href="../qtnetwork/qnetworkreply.html" translate="no">QNetworkReply</a></span><span class="operator">::</span>finished<span class="operator">,</span> <span class="operator">[</span>reply<span class="operator">,</span> <span class="keyword">this</span><span class="operator">,</span> onComplete<span class="operator">]</span>() {
+             <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span> replyStr <span class="operator">=</span> <span class="type"><a href="../qtcore/qstring.html" translate="no">QString</a></span>(reply<span class="operator">-</span><span class="operator">&gt;</span>readAll());
+
+             <span class="keyword">if</span> (reply<span class="operator">-</span><span class="operator">&gt;</span>error() <span class="operator">!</span><span class="operator">=</span> <span class="type"><a href="../qtnetwork/qnetworkreply.html" translate="no">QNetworkReply</a></span><span class="operator">::</span>NoError) {
+                 <a href="../qtcore/qtlogging.html#qDebug" translate="no">qDebug</a>() <span class="operator">&lt;</span><span class="operator">&lt;</span> <span class="string">&quot;Network error&quot;</span> <span class="operator">&lt;</span><span class="operator">&lt;</span> reply<span class="operator">-</span><span class="operator">&gt;</span>errorString() <span class="operator">&lt;</span><span class="operator">&lt;</span> reply<span class="operator">-</span><span class="operator">&gt;</span>readAll();
+             }
+             <span class="type"><a href="../qtcore/qbytearray.html" translate="no">QByteArray</a></span> data <span class="operator">=</span> replyStr<span class="operator">.</span>toUtf8();
+             <span class="type"><a href="../qtcore/qlist.html" translate="no">QList</a></span><span class="operator">&lt;</span>HistoryData<span class="operator">&gt;</span> dataList <span class="operator">=</span> parseHistory(<span class="operator">&amp;</span>data);
+             onComplete(dataList);
+             reply<span class="operator">-</span><span class="operator">&gt;</span>deleteLater();
+</pre>
+<p>The application uses the <a href="../qtqmlmodels/qml-qtqml-models-objectmodel.html" translate="no">ObjectModel</a> type to access visual data models that it depends on.</p>
+<pre class="cpp" translate="no">
+     <span class="name">id</span>: <span class="name">mainWindow</span>
+         ...
+     <span class="type"><a href="../qtquick/qml-qtquick-listview.html" translate="no">ListView</a></span> {
+         <span class="name">id</span>: <span class="name">root</span>
+         ...
+         <span class="name">model</span>: <span class="name">ObjectModel</span> {
+             <span class="type"><a href="../qtquick/qml-qtquick-item.html" translate="no">Item</a></span> {
+                 <span class="name">id</span>: <span class="name">stockContainer</span>
+                 <span class="name">width</span>: <span class="name">root</span>.<span class="name">width</span>
+                 <span class="name">height</span>: <span class="name">root</span>.<span class="name">height</span>
+                 <span class="type">StockView</span> {
+                     <span class="name">id</span>: <span class="name">stockView</span>
+                     <span class="name">anchors</span>.fill: <span class="name">parent</span>
+                     <span class="name">visible</span>: <span class="number">false</span>
+                     <span class="name">width</span>: <span class="name">root</span>.<span class="name">width</span>
+                     <span class="name">height</span>: <span class="name">root</span>.<span class="name">height</span>
+                 }
+
+                 <span class="type">StockListView</span> {
+                     <span class="name">id</span>: <span class="name">listView</span>
+                     <span class="name">visible</span>: <span class="number">true</span>
+                     <span class="name">anchors</span>.fill: <span class="name">parent</span>
+                     <span class="name">width</span>: <span class="name">root</span>.<span class="name">width</span>
+                     <span class="name">height</span>: <span class="name">root</span>.<span class="name">height</span>
+                 }
+             }
+
+             <span class="type">FavoriteView</span> {
+                 <span class="name">id</span>: <span class="name">favoriteView</span>
+                 <span class="name">width</span>: <span class="name">root</span>.<span class="name">width</span>
+                 <span class="name">height</span>: <span class="name">root</span>.<span class="name">height</span>
+             }
+
+             <span class="type">SettingsView</span> {
+                 <span class="name">id</span>: <span class="name">infoView</span>
+                 <span class="name">width</span>: <span class="name">root</span>.<span class="name">width</span>
+                 <span class="name">height</span>: <span class="name">root</span>.<span class="name">height</span>
+             }
+         }
+     }
+</pre>
+<p>The StockListModel is a custom data model listing the stocks with basic information such as stock ID, name, value, and favorite. This application uses this data model when the user wants to choose another stock from the list.</p>
+<p>StockView and FavoriteView are complex data models that present a trend chart for the selected stock or a group of up to 5 stocks. They use another custom type, StockChart or FavoriteChart, which loads the data from the StockEngine into ListModels and presents the graphical trend of the stock price using a <a href="../qtdatavis3d/qml-qtdatavisualization-surface3d.html" translate="no">Surface3D</a>, <a href="../qtdatavis3d/qml-qtdatavisualization-bars3d.html" translate="no">Bars3D</a>, or <a href="../qtdatavis3d/qml-qtdatavisualization-scatter3d.html" translate="no">Scatter3D</a>.</p>
+<pre class="cpp" translate="no">
+ <span class="type"><a href="../qtquick/qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+     <span class="name">id</span>: <span class="name">chart</span>
+         ...
+     <span class="keyword">function </span><span class="name">updateHistory</span>(){
+         <span class="name">updateStartDate</span>()
+         var startPoint = <span class="name">StockEngine</span>.<span class="name">stockModel</span>.<span class="name">indexOf</span>(<span class="name">startDate</span>)
+         var totalPoints = <span class="name">StockEngine</span>.<span class="name">stockModel</span>.<span class="name">historyCount</span>()
+
+         var width = <span class="name">startPoint</span> <span class="operator">/</span> <span class="number">50</span>
+         <span class="keyword">for</span> (var i = 0; <span class="name">i</span> <span class="operator">&lt;</span> <span class="name">totalPoints</span>; i++) {
+             var epochInDays = <span class="name">StockEngine</span>.<span class="name">stockModel</span>.<span class="name">historyDate</span>(<span class="name">i</span>, <span class="number">false</span>) <span class="operator">/</span> <span class="number">86400</span>
+             <span class="name">appendSurfacePoint</span>(<span class="name">openModel</span>, <span class="name">width</span>, <span class="name">epochInDays</span>, <span class="name">StockEngine</span>.<span class="name">stockModel</span>.<span class="name">openPrice</span>(<span class="name">i</span>))
+             <span class="name">appendSurfacePoint</span>(<span class="name">closeModel</span>,<span class="name">width</span>, <span class="name">epochInDays</span>, <span class="name">StockEngine</span>.<span class="name">stockModel</span>.<span class="name">closePrice</span>(<span class="name">i</span>))
+             <span class="name">appendSurfacePoint</span>(<span class="name">highModel</span>,<span class="name">width</span>, <span class="name">epochInDays</span>, <span class="name">StockEngine</span>.<span class="name">stockModel</span>.<span class="name">highPrice</span>(<span class="name">i</span>))
+             <span class="name">appendSurfacePoint</span>(<span class="name">lowModel</span>,<span class="name">width</span>, <span class="name">epochInDays</span>, <span class="name">StockEngine</span>.<span class="name">stockModel</span>.<span class="name">lowPrice</span>(<span class="name">i</span>))
+         }
+         ...
+     <span class="type"><a href="../qtdatavis3d/qml-qtdatavisualization-surface3d.html" translate="no">Surface3D</a></span> {
+         <span class="name">id</span>: <span class="name">historyGraph</span>
+         ...
+             <span class="type"><a href="../qtdatavis3d/qml-qtdatavisualization-surface3dseries.html" translate="no">Surface3DSeries</a></span> {
+                 <span class="name">id</span>: <span class="name">highSeries</span>
+                 <span class="name">visible</span>: <span class="number">true</span>
+                 <span class="name">baseColor</span>: <span class="string">&quot;green&quot;</span>
+                 <span class="name">flatShadingEnabled</span>: <span class="number">true</span>
+                 <span class="name">drawMode</span>: <span class="name">Surface3DSeries</span>.<span class="name">DrawSurface</span>
+                 <span class="name">itemLabelFormat</span>: <span class="string">&quot;Time: @xLabel High:@yLabel$&quot;</span>
+                 <span class="type"><a href="../qtdatavis3d/qml-qtdatavisualization-itemmodelsurfacedataproxy.html" translate="no">ItemModelSurfaceDataProxy</a></span> {
+                     <span class="name">itemModel</span>: <span class="name">highModel</span>
+                     <span class="name">rowRole</span>: <span class="string">&quot;row&quot;</span>
+                     <span class="name">columnRole</span>: <span class="string">&quot;column&quot;</span>
+                     <span class="name">yPosRole</span>: <span class="string">&quot;value&quot;</span>
+                 }
+             },
+</pre>
+<p>The SettingsView presents information on the application as well as a dropdown menu for choosing between offline and live data. Using live data also requires the user to provide an API key.</p>
+<pre class="cpp" translate="no">
+ <span class="type"><a href="../qtquick/qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+     <span class="name">id</span>: <span class="name">rectangle</span>
+         ...
+                     <span class="keyword">function </span><span class="name">handleKey</span>(keyValid) {
+                         <span class="keyword">if</span> (<span class="name">keyValid</span>) {
+                             <span class="name">invalidText</span>.<span class="name">visible</span> <span class="operator">=</span> <span class="number">false</span>
+                             <span class="name">confirmation</span>.<span class="name">visible</span> <span class="operator">=</span> <span class="number">false</span>
+                             <span class="name">StockEngine</span>.<span class="name">setUseLiveData</span>(<span class="number">true</span>)
+                         }
+</pre>
+<p>To understand the application better, browse through its code using Qt Creator.</p>
+<h4 id="running-the-example">Running the Example</h4>
+<p>To run the example from <a href="https://doc.qt.io/qtcreator/index.html" translate="no">Qt Creator</a>, open the <b translate="no">Welcome</b> mode and select the example from <b translate="no">Examples</b>. For more information, visit <a href="https://doc.qt.io/qtcreator/creator-build-example-application.html" translate="no">Building and Running an Example</a>.</p>
+<p><a href="https://code.qt.io/cgit/qt/qtdoc.git/tree/examples/demos/stocqt?h=6.7" translate="no">Example project @ code.qt.io</a></p>
+</div>
+<p><b>See also </b><a href="qmlapplications.html" translate="no">QML Applications</a>.</p>
+<!-- @@@demos/stocqt -->
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2024 <span translate="no">The Qt Company Ltd.</span>
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the <span translate="no">Free Software Foundation</span>.<br/>    <span translate="no">Qt</span> and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of <span translate="no">The Qt Company Ltd.</span> in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>

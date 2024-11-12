@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- android-how-it-works.qdoc -->
+  <meta name="description" content="An overview of how a Qt for Android app works under the hood and its architecture.">
+  <title>How Qt for Android Works | Qt 6.7</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="index.html" translate="no">Qt 6.7</a></li>
+<li>How Qt for Android Works</li>
+<li id="buildversion">Qt 6.7.0 Reference Documentation</li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+  <link rel="prev" href="android-getting-started.html" />
+  <link rel="next" href="android-building.html" />
+<p class="naviNextPrevious headerNavi">
+<a class="prevPage" href="android-getting-started.html">Getting Started with Qt for Android</a>
+<span class="naviSeparator">  &#9702;  </span>
+<a class="nextPage" href="android-building.html">Qt for Android - Building from Source</a>
+</p>
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#starting-the-qt-application">Starting the Qt Application</a></li>
+<li class="level1"><a href="#the-android-qpa">The Android QPA</a></li>
+<li class="level2"><a href="#threads">Threads</a></li>
+<li class="level2"><a href="#architecture">Architecture</a></li>
+<li class="level1"><a href="#qt-classes">Qt Classes</a></li>
+<li class="level2"><a href="#the-public-java-bindings">The Public Java Bindings</a></li>
+<li class="level2"><a href="#loading-qt-libraries-with-qtloader">Loading Qt Libraries with QtLoader</a></li>
+<li class="level1"><a href="#more-about-qt-for-android">More About Qt for Android</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">How Qt for Android Works</h1>
+<!-- $$$android-how-it-works.html-description -->
+<div class="descr" id="details">
+<p>If you're a developer looking for a high-level overview of how Qt supports the Android platform, this page is for you.</p>
+<h2 id="starting-the-qt-application">Starting the Qt Application</h2>
+<p>Similar to native Android apps, Qt main Activity's <a href="https://developer.android.com/reference/android/app/Activity#onCreate(android.os.Bundle)" translate="no">onCreate()</a> is called early on when the app is started and the Activity is created. That's where most of the initialization of the Android <a href="../qtplatformintegration/qpa.html" translate="no">Qt Platform Abstraction</a> (QPA) takes place. The most important parts are:</p>
+<ul>
+<li>Loading Qt and the main application's libraries.</li>
+<li>Initializing the delegates which takes care of initializing the rendering surfaces and the top level layout, as well as registering various listeners like input, display, touch handlers, among others.</li>
+</ul>
+<p>When loading the Qt libraries, the JavaVM is cached while <a href="../qtcore/qtcore-module.html" translate="no">QtCore</a> is first loaded. This is done under the <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/invocation.html#JNJI_OnLoad" translate="no">JNI_OnLoad()</a> function, which is called synchronously when a library is loaded using <a href="https://developer.android.com/reference/java/lang/System#load(java.lang.String)" translate="no">System.load()</a> call. Every Qt module might have an implementation for this function to do some module-specific initialization, like registering native JNI methods.</p>
+<p>Once all Qt modules libraries are loaded, Qt loads the Android QPA plugin and the main application library. After the top level <code translate="no">QtLayout</code> layout has finished inflating its content, the Qt application's <code translate="no">main()</code> handle is located and invoked. That will start the C++ Qt application and usually start the main event loop.</p>
+<h2 id="the-android-qpa">The Android QPA</h2>
+<p>The <a href="../qtplatformintegration/qpa.html" translate="no">Android QPA</a> is responsible for gluing the Android (Java/Kotlin) side with the native Qt (C++) side. It handles the various event and signal propagation both to and from Qt to Android. That responsibility spans signal handling, touch events, UI elements, and rendering, etc. This layer is also responsible for app startup initialization and cleanup upon app exit or destruction.</p>
+<h3 id="threads">Threads</h3>
+<p>With Qt for Android apps, Qt usually has two threads of interest. The first is the <code translate="no">QtThread</code> that Qt starts. The second one is the Android UI thread.</p>
+<h4 id="qtthread">QtThread</h4>
+<p>This thread is implemented and started by the Qt app first before, for example, loading the libraries. This thread is called <code translate="no">qtMainLoopThread</code>. All the following operations are executed under this thread:</p>
+<ul>
+<li>Qt library loading.</li>
+<li>Operations done inside <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/invocation.html#JNJI_OnLoad" translate="no">JNI_OnLoad()</a>.</li>
+<li>Starting the native application.</li>
+<li>The execution of <code translate="no">main()</code>.</li>
+</ul>
+<h4 id="android-ui-thread">Android UI Thread</h4>
+<p>Similar to Android apps, operations that affect the UI are expected to run in the UI thread. Qt does that under the hood for any internal calls that are expected to run in the UI. Also, Qt offers an API QAndroidApplication::runOnAndroidMainThread to run operations under this thread from C++ code. Using this API, Qt manages when the calls are directly posted to the thread if the app is active, or queued if the app is paused or in the background.</p>
+<h3 id="architecture">Architecture</h3>
+<p class="centerAlign"><img src="images/qt-android-architecture.drawio.svg" alt="&quot;An overview Qt for Android's Architecture&quot;" /></p><h2 id="qt-classes">Qt Classes</h2>
+<p>These next sections go through the various Qt Android classes and their functionality and role in Qt applications.</p>
+<h3 id="the-public-java-bindings">The Public Java Bindings</h3>
+<p>These classes are public classes that wrap the internal implementation details of the user-facing classes like <a href="https://developer.android.com/reference/android/app/Activity" translate="no">Activity</a>, <a href="https://developer.android.com/reference/android/app/Service" translate="no">Service</a> and <a href="https://developer.android.com/reference/android/app/Application" translate="no">Application</a>. These classes are used by default for Qt Android apps and referred to in the Android manifest file. The build system and deployment tools take care of including them in the build.</p>
+<p>Users can use these classes to change or extend the default behavior. For example, to add custom user-defined logic under <a href="https://developer.android.com/reference/android/app/Activity#onCreate(android.os.Bundle)" translate="no">onCreate()</a>, use the following:</p>
+<pre class="cpp" translate="no">
+ <span class="keyword">public</span> <span class="keyword">class</span> MyActivity extends <span class="type">QtActivity</span>
+ {
+     @Override
+     <span class="keyword">protected</span> <span class="type">void</span> onCreate(Bundle bundle)
+     {
+         <span class="comment">// code before Qt is initialized</span>
+         super<span class="operator">.</span>onCreate(bundle);
+         <span class="comment">// code after Qt is initialized</span>
+     }
+ }
+</pre>
+<div class="admonition note">
+<p><b>Note: </b>You must edit the <a href="../qtcore/android-manifest-file-configuration.html" translate="no">AndroidManifest.xml</a> file to use your custom <a href="https://developer.android.com/reference/android/app/Activity" translate="no">Activity</a> or binding class, otherwise, the default one will still be used.</p>
+</div>
+<h4 id="setting-a-theme">Setting a Theme</h4>
+<p>When extending <a href="android-how-it-works.html#the-public-java-bindings" translate="no">QtActivity</a>, you can set a specific Android theme using <a href="https://developer.android.com/reference/android/view/ContextThemeWrapper#setTheme(android.content.res.Resources.Theme)" translate="no">setTheme()</a>. However, that call must precede the call to the parent class's <a href="https://developer.android.com/reference/android/app/Activity#onCreate(android.os.Bundle)" translate="no">onCreate()</a> for it to take effect since Qt sets the theme by default. For example, you can use:</p>
+<pre class="cpp" translate="no">
+ @Override
+ <span class="keyword">protected</span> <span class="type">void</span> onCreate(Bundle bundle)
+ {
+     setTheme(android<span class="operator">.</span>R<span class="operator">.</span>style<span class="operator">.</span>Theme_DeviceDefault_DayNight);
+     super<span class="operator">.</span>onCreate(bubdle);
+ }
+</pre>
+<p>By default, for Android 10 and later, Qt sets the theme <a href="https://developer.android.com/reference/android/R.style#Theme_DeviceDefault_DayNight" translate="no">Theme_DeviceDefault_DayNight Style</a>, and <a href="https://developer.android.com/reference/android/R.style#Theme_Holo_Light" translate="no">Theme_Holo_Light Style</a> for earlier versions.</p>
+<h4 id="append-an-application-parameter">Append an Application Parameter</h4>
+<p>To append an extra application parameter, that is an argument that's passed to the application's <code translate="no">(main())</code> function from Java/Kotlin, you can do the following after extending <a href="android-how-it-works.html#the-public-java-bindings" translate="no">QtActivity</a>:</p>
+<pre class="cpp" translate="no">
+ @Override
+ <span class="keyword">protected</span> <span class="type">void</span> onCreate(Bundle bundle)
+ {
+     appendApplicationParameters(<span class="string">&quot;--flag value&quot;</span>);
+     super<span class="operator">.</span>onCreate(bubdle);
+ }
+</pre>
+<p>This is similar to using the CMake variable <a href="../qtcore/cmake-variable-qt-android-application-arguments.html" translate="no">QT_ANDROID_APPLICATION_ARGUMENTS</a> directly. Parameters passed using either method accept spaces or tabs as separators, and the final list of parameters passed to the application are parsed using <a href="../qtcore/qprocess.html#splitCommand" translate="no">QProcess::splitCommand</a>.</p>
+<h3 id="loading-qt-libraries-with-qtloader">Loading Qt Libraries with QtLoader</h3>
+<p>Every Qt Android app needs to ensure every native Qt or 3rd party library is first loaded before invoking any functionality from those modules. The build system keeps a list of various Qt library dependencies, the QPA plugin, the main app library, and any third-party library under the application's <a href="deployment-android.html#java-kotlin-code" translate="no">libs.xml</a> resource file. Once all the prerequisite steps mentioned in the sections below are done, the libraries are loaded using <a href="https://developer.android.com/reference/java/lang/System#load(java.lang.String)" translate="no">System.load()</a>.</p>
+<h4 id="the-class-loader">The Class Loader</h4>
+<p>The class loader object is set early on by the <code translate="no">QtLoader</code> before loading Qt libraries or initializing the delegates. This is because the class loader is used by <a href="../qtcore/qjniobject.html" translate="no">QJniObject</a> to find Java classes and is required to do any JNI call with <a href="../qtcore/qjniobject.html" translate="no">QJniObject</a>.</p>
+<h4 id="setting-environment-variables-and-application-parameters">Setting Environment Variables and Application Parameters</h4>
+<p>Before loading the libraries, Qt has to ensure environment variables are passed as metadata in the Android manifest to set. This step enables the initialization of some modules based on the configuration flags set as manifest meta-data. Some of this meta-data is also propagated to the application parameters list that is passed to the application when it's started.</p>
+<h4 id="setactivity-setcontext-and-setservice">setActivity(), setContext() and setService()</h4>
+<p>Various Qt modules might need to do some initialization work from the Java side that requires having the context of the <a href="https://developer.android.com/reference/android/app/Activity" translate="no">Activity</a> or <a href="https://developer.android.com/reference/android/app/Service" translate="no">Service</a>. Those modules then implement a static method that takes an <a href="https://developer.android.com/reference/android/app/Activity" translate="no">Activity</a>, Service or Context as a parameter:</p>
+<pre class="cpp" translate="no">
+ <span class="type">void</span> setActivity(Activity activity)
+ {
+     m_activity <span class="operator">=</span> activity;
+     <span class="comment">// Other logic</span>
+ }
+</pre>
+<p>Then, the <code translate="no">QtLoader</code> invokes these methods with the parent context of the loader just before loading the native shared libraries.</p>
+<h2 id="more-about-qt-for-android">More About Qt for Android</h2>
+<p>The video from the 2021 Qt World Summit gives an overview of Qt for Android.</p>
+<div class="video">
+<a href="https://www.youtube.com/watch/?v=nmvurCcsWos">
+<img src="images/nmvurCcsWos.jpg" title="Click to play in a browser" /></a>
+</div>
+<p>&quot;A picture of an agenda that links to a YouTube video&quot;</p>
+</div>
+<!-- @@@android-how-it-works.html -->
+<p class="naviNextPrevious footerNavi">
+<a class="prevPage" href="android-getting-started.html">Getting Started with Qt for Android</a>
+<span class="naviSeparator">  &#9702;  </span>
+<a class="nextPage" href="android-building.html">Qt for Android - Building from Source</a>
+</p>
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2024 <span translate="no">The Qt Company Ltd.</span>
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the <span translate="no">Free Software Foundation</span>.<br/>    <span translate="no">Qt</span> and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of <span translate="no">The Qt Company Ltd.</span> in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>

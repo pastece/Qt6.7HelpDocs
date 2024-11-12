@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- vxworks.qdoc -->
+  <meta name="description" content="Platform support for VxWorks.">
+  <title>Qt for VxWorks | Qt 6.7</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="index.html" translate="no">Qt 6.7</a></li>
+<li>Qt for VxWorks</li>
+<li id="buildversion">Qt 6.7.0 Reference Documentation</li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<div class="sidebar">
+<div class="toc">
+<h3 id="toc">Contents</h3>
+<ul>
+<li class="level1"><a href="#supported-architectures-and-vxworks-releases">Supported Architectures and VxWorks Releases</a></li>
+<li class="level1"><a href="#requirements-for-vxworks">Requirements for VxWorks</a></li>
+<li class="level2"><a href="#qt-widgets-applications">Qt Widgets Applications</a></li>
+<li class="level2"><a href="#qt-quick-2-applications">Qt Quick 2 Applications</a></li>
+<li class="level1"><a href="#supported-modules">Supported Modules</a></li>
+<li class="level2"><a href="#supported-essential-modules">Supported Essential modules</a></li>
+<li class="level2"><a href="#supported-add-ons">Supported Add-Ons</a></li>
+<li class="level1"><a href="#platform-notes">Platform Notes</a></li>
+<li class="level1"><a href="#configuring-for-a-specific-device">Configuring for a Specific Device</a></li>
+<li class="level1"><a href="#building-and-installing-qt-6">Building and Installing Qt 6</a></li>
+<li class="level1"><a href="#platform-plugins-for-vxworks-devices">Platform Plugins for VxWorks Devices</a></li>
+<li class="level2"><a href="#eglfs">EGLFS</a></li>
+<li class="level1"><a href="#running-qt-applications">Running Qt Applications</a></li>
+<li class="level1"><a href="#limitations">Limitations</a></li>
+<li class="level2"><a href="#video-memory">Video Memory</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title">Qt for VxWorks</h1>
+<!-- $$$vxworks.html-description -->
+<div class="descr" id="details">
+<p>Contact The Qt Company for more information: <a href="https://www.qt.io/contact-us/" translate="no">https://www.qt.io/contact-us/</a></p>
+<h2 id="supported-architectures-and-vxworks-releases">Supported Architectures and VxWorks Releases</h2>
+<ul>
+<li>Qt 6.7 is verified on VxWorks 23.09 Supported architecture is ARM-v7.</li>
+</ul>
+<p>If you are interested in later Qt releases, please <a href="https://www.qt.io/contact-us/" translate="no">contact</a> Qt professional services.</p>
+<h2 id="requirements-for-vxworks">Requirements for VxWorks</h2>
+<h3 id="qt-widgets-applications">Qt Widgets Applications</h3>
+<ul>
+<li>POSIX support</li>
+<li>C++17 support</li>
+</ul>
+<h3 id="qt-quick-2-applications">Qt Quick 2 Applications</h3>
+<p>All features which are required for Qt Widgets applications, and in addition the following:</p>
+<ul>
+<li>GPU device (GPUDEV) for OpenGL ES 2.0</li>
+</ul>
+<h2 id="supported-modules">Supported Modules</h2>
+<p>Most essential <a href="qtmodules.html" translate="no">Qt modules</a> and some add-on modules are supported.</p>
+<h3 id="supported-essential-modules">Supported Essential modules</h3>
+<div class="table"><table class="generic" width="80%">
+ <thead><tr class="qt-style"><th >Qt Module</th><th >Supported Features</th><th >Notes</th></tr></thead>
+<tr valign="top" class="odd"><td ><a href="../qtcore/qtcore-index.html" translate="no">Qt Core</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="../qtgui/qtgui-index.html" translate="no">Qt GUI</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="../qtnetwork/qtnetwork-index.html" translate="no">Qt Network</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="../qtqml/qtqml-index.html" translate="no">Qt Qml</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="../qtquick/qtquick-index.html" translate="no">Qt Quick</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="../qtquickcontrols/qtquickcontrols-index.html" translate="no">Qt Quick Controls</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="../qtquickdialogs/qtquickdialogs-index.html" translate="no">Qt Quick Dialogs</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="../qtquick/qtquicklayouts-index.html" translate="no">Qt Quick Layouts</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="../qtqmltest/qtquicktest-index.html" translate="no">Qt Quick Test</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="../qttestlib/qttest-index.html" translate="no">Qt Test</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="../qtwidgets/qtwidgets-index.html" translate="no">Qt Widgets</a></td><td ></td></tr>
+</table></div>
+<h3 id="supported-add-ons">Supported Add-Ons</h3>
+<div class="table"><table class="generic" width="80%">
+ <thead><tr class="qt-style"><th >Qt Add-Ons</th><th >Notes</th></tr></thead>
+<tr valign="top" class="odd"><td ><a href="../qtconcurrent/qtconcurrent-index.html" translate="no">Qt Concurrent</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="../qtgrpc/qtgrpc-index.html" translate="no">Qt GRPC/Protobuf</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="../qtgraphs/qtgraphs-index.html" translate="no">Qt Graphs</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="license-changes.html#qt-image-formats" translate="no">Qt Image Formats</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="../qtmultimedia/qtmultimedia-index.html" translate="no">Qt Multimedia</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="../qtplatformintegration/native-interfaces.html" translate="no">Qt Native Interfaces</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="../qtopengl/qtopengl-index.html" translate="no">Qt OpenGL</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="../qtquick3d/qtquick3d-index.html" translate="no">Qt Quick 3D</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="http://doc.qt.io/QtQuickCompiler" translate="no">Qt Quick Compiler</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="../qtquick/qtquick-effects-qmlmodule.html" translate="no">Qt Quick Effects</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="../qtsql/qtsql-index.html" translate="no">Qt SQL</a></td><td ></td></tr>
+<tr valign="top" class="even"><td ><a href="../qtsvg/qtsvg-index.html" translate="no">Qt SVG</a></td><td ></td></tr>
+<tr valign="top" class="odd"><td ><a href="../qtvirtualkeyboard/qtvirtualkeyboard-index.html" translate="no">Qt Virtual Keyboard</a></td><td ></td></tr>
+</table></div>
+<div class="admonition note">
+<p><b>Note: </b>You can explicitly exclude unsupported or unused modules from the build via the -skip &lt;module&gt; option when running the configure tool.</p>
+</div>
+<h2 id="platform-notes">Platform Notes</h2>
+<p>With the release of Qt 5.0, Qt no longer contains its own window system implementation: QWS is no longer a supported platform. For single-process use cases, the <a href="../qtplatformintegration/qpa.html" translate="no">Qt Platform Abstraction</a> is a superior solution.</p>
+<p>There is one plugin that is usable on VxWorks: EGLFS. The availability of this plugins depends on the configuration of Qt.</p>
+<h2 id="configuring-for-a-specific-device">Configuring for a Specific Device</h2>
+<p>Building Qt for a given device requires a Qt6 installation for compilation host, a toolchain and a sysroot. Additionally, some devices require vendor specific adaptation code for EGL and OpenGL 2.0 support.</p>
+<p>Before running configure and building Qt 6 it is required to open <i>VxWorks Development Shell</i> in command prompt.</p>
+<ul>
+<li>Linux:<pre class="cpp plain" translate="no">
+ cd &lt;VxWorks installation directory&gt;
+ ./wrenv.sh -p vxworks
+</pre>
+</li>
+<li>Windows:<pre class="cpp plain" translate="no">
+ cd &lt;VxWorks installation directory&gt;
+ wrenv -p vxworks
+</pre>
+</li>
+</ul>
+<p>Below is an example configuration for the BD-SL-i.MX6. For most VxWorks boards the configure command looks very similar. By default, Qt 6 is configured to use shared libraries. To build Qt 6 statically, add <code translate="no">-static</code> option for configure.</p>
+<pre class="cpp plain" translate="no">
+ ./configure \
+     -cmake-generator &quot;Ninja&quot; \
+     -icu \
+     -no-feature-timezone \
+     -no-feature-vulkan \
+     -platform vxworks-clang \
+     -qt-host-path &lt;path_to_qt6_host_installation_dir&gt; \
+     -sysroot &lt;path_to_vxworks_vsb_dir&gt;/fsl_imx6_&lt;vsb_version&gt;_VSB \
+     -qpa &quot;eglfs&quot; \
+     -DQT_QPA_EGLFS_INTEGRATION=eglfs_viv \
+     -prefix /sd0:1/qt6rtp \
+     -extprefix &lt;path_to_host_dir&gt;/qt6rtp \
+     -nomake tools \
+     -nomake examples
+</pre>
+<p>It is recommended to build Qt 6 using a <i>shadow build</i>. See <a href="configure-options.html" translate="no">Qt Configure Options</a> for more information.</p>
+<h2 id="building-and-installing-qt-6">Building and Installing Qt 6</h2>
+<pre class="cpp plain" translate="no">
+ ninja
+ ninja install
+</pre>
+<h2 id="platform-plugins-for-vxworks-devices">Platform Plugins for VxWorks Devices</h2>
+<h3 id="eglfs">EGLFS</h3>
+<p><a href="http://www.khronos.org/egl" translate="no">EGL</a> is an interface between OpenGL and the native windowing system. Qt can use EGL for context and surface management. However, the API contains no platform specifics. The creation of a <i>native window</i> (which will not necessarily be an actual window on the screen) must still be done by platform-specific means. Hence the need for the board or GPU specific adaptation code. Such adaptations are provided either as <i>EGLFS hooks</i>, a single source file compiled in to the platform plugin, or as dynamically loaded <i>EGL device integration</i> plugins.</p>
+<p>EGLFS is a platform plugin for running Qt 6 applications on top of EGL and OpenGL ES 2.0 without an actual windowing system (like X11 or Wayland). In addition to Qt Quick 2 and native OpenGL applications it supports software-rendered windows (for example <a href="../qtwidgets/qwidget.html" translate="no">QWidget</a>) too. In the latter case the widgets' contents are rendered using the CPU into images which are then uploaded into textures and composited by the plugin.</p>
+<p>This is the recommended plugin for modern VxWorks devices that include a GPU.</p>
+<p>EGLFS forces the first top-level window (either a <a href="../qtwidgets/qwidget.html" translate="no">QWidget</a> or a <a href="../qtquick/qquickview.html" translate="no">QQuickView</a>) to become fullscreen. This window is also chosen to be the <i>root</i> widget window into which all other top-level widgets (for example dialogs, popup menus or combobox dropdowns) are composited. This is necessary because with EGLFS there is always exactly one native window and EGL window surface, and these belong to the widget or window that is created first. This approach works well when there is a main window that exists for the entire lifetime of the application and all other widgets are either non top-levels or are created afterwards, once the main window is shown.</p>
+<p>There are further restrictions for OpenGL-based windows. As of Qt 6.7, EGLFS supports a single, fullscreen GL window (for example, an OpenGL-based <a href="../qtgui/qwindow.html" translate="no">QWindow</a>, a <a href="../qtquick/qquickview.html" translate="no">QQuickView</a> or a QGLWidget). Opening additional OpenGL windows or mixing such windows with <a href="../qtwidgets/qwidget.html" translate="no">QWidget</a>-based content is not supported and will terminate the application with an error message.</p>
+<p>If necessary, EGLFS can be configured via environment variables:</p>
+<ul>
+<li><code translate="no">QT_QPA_EGLFS_FB</code> - Overrides the framebuffer device. The default is <code translate="no">/dev/fb0</code>. On most embedded platforms this is not very relevant because the framebuffer is used only for querying settings like the display dimensions. On certain devices, however, this parameter provides the ability to specify which display to use in multiple display setups, similarly to the <code translate="no">fb</code> parameter in VxWorksFB.</li>
+<li><code translate="no">QT_QPA_EGLFS_WIDTH</code> and <code translate="no">QT_QPA_EGLFS_HEIGHT</code> - Contain the screen width and height in pixels. While EGLFS tries to determine the dimensions from the framebuffer device <i>/dev/fb0</i>, this doesn't always work and manually specifying the sizes might become necessary.</li>
+<li><code translate="no">QT_QPA_EGLFS_PHYSICAL_WIDTH</code> and <code translate="no">QT_QPA_EGLFS_PHYSICAL_HEIGHT</code> - Physical screen width and height in millimeters. On platforms where the framebuffer device <i>/dev/fb0</i> is not available or the query is not successful, the values are calculated based on a default DPI of 100. This variable can be used to override any such defaults.</li>
+<li><code translate="no">QT_QPA_EGLFS_DEPTH</code> - Overrides the color depth for the screen. On platforms where the framebuffer device <i>/dev/fb0</i> is not available or the query is not successful, the default 32 is used. This variable can be used to override any such defaults. Note that this affects only the color depth value reported by <a href="../qtgui/qscreen.html" translate="no">QScreen</a>. It has no connection to EGL configurations and the color depth used for OpenGL rendering.</li>
+<li><code translate="no">QT_QPA_EGLFS_SWAPINTERVAL</code> - By default a swap interval of <code translate="no">1</code> is requested. This enables synchronizing to the displays vertical refresh. The value can be overridden with this environment variable. For instance, passing 0 disables blocking on swap, resulting in running as fast as possible without any synchronization.</li>
+<li><code translate="no">QT_QPA_EGLFS_FORCE888</code> - When set, the red, green and blue color channel sizes are ignored whenever creating a new context, window or offscreen surface. Instead, the plugin requests a configuration with 8 bits per channel. This can be helpful on devices where configurations with less than 32 or 24 bits per pixel are chosen by default but are known not to be suitable, for example, due to banding effects. Instead of changing all the applications, this variable provides an easier shortcut to force 24/32 bpp configurations for a given device.</li>
+<li><code translate="no">QT_QPA_EGLFS_DEBUG</code> - When set, some debugging information is printed on the debug output. For example, the input <a href="../qtgui/qsurfaceformat.html" translate="no">QSurfaceFormat</a> and the properties of the chosen EGL configuration are printed whenever creating a new context. Together with Qt Quick's <code translate="no">QSG_INFO</code> variable, this can provide useful information for troubleshooting issues related to the EGL configuration.</li>
+<li><code translate="no">QT_QPA_EGLFS_INTEGRATION</code> - In addition to the compiled-in <i>hooks</i>, it is also possible to provide device or vendor-specific adaptation in the form of dynamically loaded plugins. This environment variable enforces a specific plugin. For example, setting it to <i>eglfs_kms</i> uses the KMS/DRM backend. This is only an option when no static, compiled-in hooks were specified in the device makespecs. In practice the traditional compiled-in hooks are rarely used, almost all backends are now migrated to plugins. The device makespecs still contain a relevant <code translate="no">EGLFS_DEVICE_INTEGRATION</code> entry: the name of the preferred backend for that particular device. This is optional, but very useful to avoid the need to set this environment variable in case there are more than one plugins present in the target system. In a desktop environment the KMS or the X11 backends are prioritized, depending on the presence of the <code translate="no">DISPLAY</code> environment variable.</li>
+</ul>
+<p>In addition to <code translate="no">QT_QPA_EGLFS_DEBUG</code>, EGLFS also supports the more modern categorized logging system of Qt. The following logging categories are available:</p>
+<ul>
+<li><code translate="no">qt.qpa.egldeviceintegration</code> &ndash; Enables logging for dynamically loaded backends. Very useful to check what backend is in use.</li>
+<li><code translate="no">qt.qpa.input</code> &ndash; Enables debug output from the evdev input handler. Very useful to check if a given input device was correctly recognized and opened.</li>
+</ul>
+<h2 id="running-qt-applications">Running Qt Applications</h2>
+<p>The following example shows how to start an application when Qt 6 is built using shared libraries. With a statically built Qt 6, there is no need to use the LD_LIBRARY_PATH environment variable. This variable is only needed to point the location of VxWorks shared libraries (for example libc and OpenGL ES 2.0). It is not needed for Qt 6 static libraries.</p>
+<pre class="cpp plain" translate="no">
+ putenv &quot;LD_LIBRARY_PATH=/sd0:1/lib&quot;
+ cd &quot;/sd0:1&quot;
+ rtpSp(&quot;&lt;Qt6_app&gt;&quot;, 200, 0x100000, 0, 0x01000000)
+</pre>
+<h2 id="limitations">Limitations</h2>
+<h3 id="video-memory">Video Memory</h3>
+<p>Systems with a fixed amount of dedicated video memory may need extra care before running Qt application based on Qt Quick or classes like <a href="../qtopengl/qopenglwidget.html" translate="no">QOpenGLWidget</a>. The default setting may be insufficient for such applications, especially when they are displayed on a high resolution (for example, full HD) screen. In this case they might start failing in unexpected ways. It is therefore recommended to ensure that there is at least 128 MB of GPU memory available. For systems that do not have a fixed amount of memory reserved for the GPU this is not an issue.</p>
+</div>
+<!-- @@@vxworks.html -->
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2024 <span translate="no">The Qt Company Ltd.</span>
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the <span translate="no">Free Software Foundation</span>.<br/>    <span translate="no">Qt</span> and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of <span translate="no">The Qt Company Ltd.</span> in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- qtquick3d-examples-outline_extension.qdoc -->
+  <meta name="description" content="Demonstrates how the QtQuick3D Render Extension can be used to implement stencil outlining.">
+  <title>Qt Quick 3D - Stencil Outline Extension Example | Qt Quick 3D 6.7.0</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="../qtdoc/index.html" translate="no">Qt 6.7</a></li>
+<li><a href="qtquick3d-index.html" translate="no">Qt Quick 3D</a></li>
+<li><a href="quick3d-examples.html" translate="no">Qt Quick 3D Examples and Tutorials</a></li>
+<li>Qt Quick 3D - Stencil Outline Extension Example</li>
+<li id="buildversion"><a href="qtquick3d-index.html" translate="no">Qt Quick 3D | Commercial or GPLv3</a></li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<h1 class="title">Qt Quick 3D - Stencil Outline Extension Example</h1>
+<pre class="cpp" translate="no">
+ <span class="comment">// Copyright (C) 2023 The Qt Company Ltd.</span>
+ <span class="comment">// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause</span>
+
+ <span class="preprocessor">#ifndef OUTLINERENDEREXTENSION_H</span>
+ <span class="preprocessor">#define OUTLINERENDEREXTENSION_H</span>
+
+ <span class="preprocessor">#include &lt;QtQuick3D/qquick3drenderextensions.h&gt;</span>
+ <span class="preprocessor">#include &lt;QtQmlIntegration&gt;</span>
+
+ <span class="keyword">class</span> OutlineRenderExtension : <span class="keyword">public</span> QQuick3DRenderExtension
+ {
+     Q_OBJECT
+     Q_PROPERTY(QQuick3DObject <span class="operator">*</span> target READ target WRITE setTarget NOTIFY targetChanged)
+     Q_PROPERTY(QQuick3DObject <span class="operator">*</span> outlineMaterial READ outlineMaterial WRITE setOutlineMaterial NOTIFY outlineMaterialChanged)
+     Q_PROPERTY(<span class="type">float</span> outlineScale READ outlineScale WRITE setOutlineScale NOTIFY outlineScaleChanged)
+     QML_ELEMENT
+
+ <span class="keyword">public</span>:
+     OutlineRenderExtension() <span class="operator">=</span> <span class="keyword">default</span>;
+     <span class="operator">~</span>OutlineRenderExtension() override;
+
+     <span class="type">float</span> outlineScale() <span class="keyword">const</span>;
+     <span class="type">void</span> setOutlineScale(<span class="type">float</span> newOutlineScale);
+
+     QQuick3DObject <span class="operator">*</span>target() <span class="keyword">const</span>;
+     <span class="type">void</span> setTarget(QQuick3DObject <span class="operator">*</span>newTarget);
+
+     QQuick3DObject <span class="operator">*</span>outlineMaterial() <span class="keyword">const</span>;
+     <span class="type">void</span> setOutlineMaterial(QQuick3DObject <span class="operator">*</span>newOutlineMaterial);
+
+ <span class="keyword">signals</span>:
+     <span class="type">void</span> outlineColorChanged();
+     <span class="type">void</span> outlineScaleChanged();
+     <span class="type">void</span> targetChanged();
+     <span class="type">void</span> outlineMaterialChanged();
+
+ <span class="keyword">protected</span>:
+     <span class="type">QSSGRenderGraphObject</span> <span class="operator">*</span>updateSpatialNode(<span class="type">QSSGRenderGraphObject</span> <span class="operator">*</span>node) override;
+
+ <span class="keyword">private</span>:
+     <span class="keyword">enum</span> Dirty : <span class="type"><a href="../qtcore/qttypes.html#quint8-typedef" translate="no">quint8</a></span>
+     {
+         Target <span class="operator">=</span> <span class="number">1</span> <span class="operator">&lt;</span><span class="operator">&lt;</span> <span class="number">0</span><span class="operator">,</span>
+         OutlineMaterial <span class="operator">=</span> <span class="number">1</span> <span class="operator">&lt;</span><span class="operator">&lt;</span> <span class="number">1</span><span class="operator">,</span>
+         OutlineScale <span class="operator">=</span> <span class="number">1</span> <span class="operator">&lt;</span><span class="operator">&lt;</span> <span class="number">2</span>
+     };
+
+     <span class="keyword">using</span> DirtyT <span class="operator">=</span> std<span class="operator">::</span>underlying_type_t<span class="operator">&lt;</span>Dirty<span class="operator">&gt;</span>;
+
+     <span class="type">void</span> markDirty(Dirty v);
+
+     <span class="type"><a href="../qtcore/qpointer.html" translate="no">QPointer</a></span><span class="operator">&lt;</span>QQuick3DObject<span class="operator">&gt;</span> m_target;
+     <span class="type"><a href="../qtcore/qpointer.html" translate="no">QPointer</a></span><span class="operator">&lt;</span>QQuick3DObject<span class="operator">&gt;</span> m_outlineMaterial;
+     <span class="type">float</span> m_outlineScale <span class="operator">=</span> <span class="number">1.05f</span>;
+     DirtyT m_dirtyFlag {};
+ };
+
+ <span class="preprocessor">#endif // OUTLINERENDEREXTENSION_H</span>
+</pre>
